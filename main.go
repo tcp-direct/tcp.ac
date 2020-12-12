@@ -4,59 +4,43 @@ import (
 	"github.com/scottleedavis/go-exif-remove"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"github.com/twharmon/gouid"
-	"mime/multipart"
+	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"net/http"
-	"errors"
 	"image"
 	"fmt"
 	"log"
+	"io"
 )
 
 var errLog *log.Logger
 
 var debugBool bool = true
 
-func init() {
-	err := &lumberjack.Logger{
-		Filename:   "error.log",
-		MaxSize:    50, // megabytes
-		MaxBackups: 8,
-		MaxAge:     28, // days
-		Compress:   true,
-	}
-
-	errLog = log.New(err, "", log.Ldate|log.Ltime|log.Lshortfile)
-}
-
-func errThrow(w http.ResponseWriter, r *http.Request,  Error, msg string) {
-	errLog.Println(remoteAddr(r) + ": " + Error)
+func errThrow(c *gin.Context, respcode int, Error string, msg string) {
+	errLog.Println(c.ClientIP() + ": " + Error)
 	if debugBool {
-		fmt.Fprintf(w, msg)
+		c.String(respcode, msg)
 	}
 }
 
-func imgPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("[imgPost] detected new upload")
-
-	err := r.ParseMultipartForm(12 << 20)
+func imgPost(c *gin.Context) {
+	f, err := c.FormFile("upload")
 	if err != nil {
-		errThrow(w, r, http.StatusBadRequest, err.Error(), "error parsing upload data")
-		return
+		errThrow(c, http.StatusBadRequest, err.Error(), "no file detected within request")
 	}
 
-	fmt.Println("[imgPost] creating file handler and checking size")
-	f, size, err := extractFile(r, "upload")
+	fmt.Println("[imgPost] detected new upload: " + f.Filename)
+
+	file, err := f.Open()
 	if err != nil {
-		errThrow(r, http.StatusBadRequest, err.Error(), "upload data is invalid")
-		return
+		errThrow(c, http.StatusInternalServerError, err.Error(), "error processing file")
 	}
-	defer f.Close()
 
 	fmt.Println("[imgPost] verifying file is an image")
-	imageFormat, ok := checkImage(f)
+	imageFormat, ok := checkImage(file)
 	if !ok {
-		errThrow(r, http.StatusBadRequest, "not an image", "input does not appear to be an image")
+		errThrow(c, http.StatusBadRequest, err.Error(), "input does not appear to be an image")
 		return
 	}
 
@@ -64,10 +48,10 @@ func imgPost(w http.ResponseWriter, r *http.Request) {
 	uid := gouid.String(8)
 
 	fmt.Println("[imgPost][" + uid + "] dumping byte form of file and scrubbing exif")
-	fbytes, err := ioutil.ReadAll(f)
+	fbytes, err := ioutil.ReadAll(file)
 	Scrubbed, err := exifremove.Remove(fbytes)
-	if _, err:= io.Copy(buf, f); err != nil {
-		errThrow(r, http.StatusInternalServerError, err.Error(), "error scrubbing exif")
+	if err != nil {
+		errThrow(c, http.StatusInternalServerError, err.Error(), "error scrubbing exif")
 		return
 	}
 
@@ -75,22 +59,12 @@ func imgPost(w http.ResponseWriter, r *http.Request) {
 
 //	contentType := "image/" + imageFormat
 
-	err := ioutil.WriteFile("./live/img/" + uid + "." + imageFormat, Scrubbed)
+	err = ioutil.WriteFile("./live/img/" + uid + "." + imageFormat, Scrubbed, 755)
 	if err != nil {
-		errThrow(r, http.StatusInternalServerError, err.Error(), "error saving file")
+		errThrow(c, http.StatusInternalServerError, err.Error(), "error saving file")
 		return
 	}
 }
-
-func remoteAddr(r *http.Request) (ip string) {
-	forwarded := r.Header.Get("X-FORWARDED-FOR")
-	if forwarded != "" {
-		return forwarded
-	}
-	return r.RemoteAddr
-}
-
-///// Stolen functions below //////////////////////////////////////
 
 func checkImage(r io.ReadSeeker) (string, bool) {
 	_, fmt, err := image.Decode(r)
@@ -100,32 +74,6 @@ func checkImage(r io.ReadSeeker) (string, bool) {
 	}
 
 	return fmt, true
-}
-
-func extractFile(r *http.Request, field string) (multipart.File, int64, error) {
-	files, found := r.MultipartForm.file[field]
-
-	if !found || len(files) < 1 {
-		return nil, "", 0, fmt.Errorf("'%s' not found", field)
-	}
-	file := files[0]
-
-	fmt.Printf("Uploaded File: %+v\n", r.Filename)
-	fmt.Printf("File Size: %+v\n", r.Size)
-	fmt.Printf("MIME Header: %+v\n", r.Header)
-
-	f, err := file.Open()
-
-	if err != nil {
-		return nil, "", 0, errors.New("could not open multipart file")
-	}
-
-	size, err := getSize(f)
-	if err != nil {
-		return nil, "", 0, errors.New("could not find size of file")
-	}
-
-	return f, size, nil
 }
 
 func getSize(s io.Seeker) (size int64, err error) {
@@ -142,16 +90,50 @@ func getSize(s io.Seeker) (size int64, err error) {
 	return
 }
 
-////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
 
+func txtPost(c *gin.Context) {
+	return
+}
+
+//////////////////////////////////////////////////////
+
+func urlPost(c *gin.Context) {
+	return
+}
+
+
+func init() {
+	err := &lumberjack.Logger{
+		Filename:   "error.log",
+		MaxSize:    50, // megabytes
+		MaxBackups: 8,
+		MaxAge:     28, // days
+		Compress:   true,
+	}
+
+	errLog = log.New(err, "", log.Ldate|log.Ltime|log.Lshortfile)
+}
 
 func main() {
+	router := gin.Default()
 
-	router := goji.NewMux()
+	router.MaxMultipartMemory = 12 << 20
 
-	router.HandleFunc(pat.Post("/i/put"), imgPost)
-	router.HandleFunc(pat.Post("/t/put"), txtPost)
-	router.HandleFunc(pat.Post("/u/put"), urlPost)
+	imgR := router.Group("/i")
+	{
+		imgR.POST("/put", imgPost)
+	}
 
-	http.ListenAndServe("0.0.0.0:8080", router)
+	txtR := router.Group("/t")
+	{
+		txtR.POST("/put", txtPost)
+	}
+
+	urlR := router.Group("/u")
+	{
+		urlR.POST("/put", urlPost)
+	}
+
+	router.Run(":8081")
 }
