@@ -120,6 +120,10 @@ func main() {
 
 	router.MaxMultipartMemory = 12 << 20
 
+	router.StaticFile("/", "./resources/index.html")
+	router.StaticFile("/min.css", "./resources/spectre.min.css")
+	router.StaticFile("/icons.css", "./resources/spectre-iconf.min.css")
+
 	imgR := router.Group("/i")
 	{
 		imgR.POST("/put", imgPost)
