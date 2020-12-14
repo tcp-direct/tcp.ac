@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/scottleedavis/go-exif-remove"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"github.com/prologic/bitcask"
 	"github.com/twharmon/gouid"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
@@ -13,8 +14,10 @@ import (
 	"io"
 )
 
+var imgDB *bitcask.Bitcask
+var urlDB *bitcask.Bitcask
+var txtDB *bitcask.Bitcask
 var errLog *log.Logger
-
 var debugBool bool = true
 
 func errThrow(c *gin.Context, respcode int, Error string, msg string) {
@@ -42,7 +45,7 @@ func imgPost(c *gin.Context) {
 	if !ok {
 		errThrow(c, http.StatusBadRequest, err.Error(), "input does not appear to be an image")
 		return
-	}
+	} else { fmt.Println("[imgPost] " + imageFormat + " detected") }
 
 	fmt.Println("[imgPost] generating uid")
 	uid := gouid.String(8)
@@ -55,15 +58,18 @@ func imgPost(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("[imgPost][" + uid + "] saving file (fin)")
+	fmt.Println(string(Scrubbed))
+
+	fmt.Println("[imgPost][" + uid + "] saving file to database (fin)")
 
 //	contentType := "image/" + imageFormat
 
-	err = ioutil.WriteFile("./live/img/" + uid + "." + imageFormat, Scrubbed, 755)
+	imgDB.Put([]byte(uid), []byte(Scrubbed))
+
 	if err != nil {
 		errThrow(c, http.StatusInternalServerError, err.Error(), "error saving file")
 		return
-	}
+	} else { fmt.Println("[imgPost][" + uid + "] saved to database successfully") }
 }
 
 func checkImage(r io.ReadSeeker) (string, bool) {
@@ -72,7 +78,6 @@ func checkImage(r io.ReadSeeker) (string, bool) {
 	if err != nil || err2 != nil {
 		return "", false
 	}
-
 	return fmt, true
 }
 
@@ -102,9 +107,15 @@ func urlPost(c *gin.Context) {
 	return
 }
 
+//////////////////////////////////////////////////////
 
 func init() {
-	err := &lumberjack.Logger{
+
+	fmt.Println("Initializing...")
+
+	//////////// init logging ////////////
+	fmt.Println("Starting error logger")
+	Logger := &lumberjack.Logger{
 		Filename:   "error.log",
 		MaxSize:    50, // megabytes
 		MaxBackups: 8,
@@ -112,21 +123,34 @@ func init() {
 		Compress:   true,
 	}
 
-	errLog = log.New(err, "", log.Ldate|log.Ltime|log.Lshortfile)
+	errLog = log.New(Logger, "", log.Ldate|log.Ltime|log.Lshortfile)
+	/////////////////////////////////////
+
+	/////////// init databases //////////
+	imgDB, _ = bitcask.Open("img.db")
+	fmt.Println("Opening img.db")
+
+	txtDB, _ = bitcask.Open("txt.db")
+	fmt.Println("Opening txt.db")
+
+	urlDB, _ = bitcask.Open("url.db")
+	fmt.Println("Opening url.db")
+	////////////////////////////////////
+
+
 }
+
+
 
 func main() {
 	router := gin.Default()
 
-	router.MaxMultipartMemory = 12 << 20
-
-	router.StaticFile("/", "./resources/index.html")
-	router.StaticFile("/min.css", "./resources/spectre.min.css")
-	router.StaticFile("/icons.css", "./resources/spectre-iconf.min.css")
+	router.MaxMultipartMemory = 16 << 20
 
 	imgR := router.Group("/i")
 	{
 		imgR.POST("/put", imgPost)
+		imgR.GET("/test", imgTest)
 	}
 
 	txtR := router.Group("/t")
