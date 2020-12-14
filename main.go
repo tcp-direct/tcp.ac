@@ -1,6 +1,7 @@
 package main
 
 import (
+	valid "github.com/asaskevich/govalidator"
 	"github.com/scottleedavis/go-exif-remove"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"github.com/prologic/bitcask"
@@ -9,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"image"
+	"bytes"
 	"fmt"
 	"log"
 	"io"
@@ -26,6 +28,33 @@ func errThrow(c *gin.Context, respcode int, Error string, msg string) {
 		c.String(respcode, msg)
 	}
 }
+
+func imgView(c *gin.Context) {
+	rUid := c.Param("uid")
+	fmt.Println("[imgView] Received request")
+	if (valid.IsAlphanumeric(rUid)) {
+		fmt.Println("[imgView][" + rUid + "] Request validated")
+		fBytes, _ := imgDB.Get([]byte(rUid))
+		if fBytes == nil {
+			fmt.Println("[imgView] No data found for: " + rUid)
+			errThrow(c, 404, "404", "File not found")
+			return
+		}
+
+		fmt.Println("[imgView][" + rUid + "] Detecting image type")
+		file := bytes.NewReader(fBytes)
+		imageFormat, ok := checkImage(file)
+	        if !ok {
+			errThrow(c, http.StatusBadRequest, "bad request", "content does not appear to be an image")
+			return
+		} else { fmt.Println("[imgView][" + rUid + "] " + imageFormat + " detected") }
+
+		contentType := "image/" + imageFormat
+
+		c.Data(200, contentType, fBytes)
+	}
+}
+
 
 func imgPost(c *gin.Context) {
 	f, err := c.FormFile("upload")
@@ -58,16 +87,13 @@ func imgPost(c *gin.Context) {
 		return
 	}
 
-	fmt.Println(string(Scrubbed))
-
 	fmt.Println("[imgPost][" + uid + "] saving file to database (fin)")
 
-//	contentType := "image/" + imageFormat
-
-	imgDB.Put([]byte(uid), []byte(Scrubbed))
+	err = imgDB.Put([]byte(uid), []byte(Scrubbed))
 
 	if err != nil {
 		errThrow(c, http.StatusInternalServerError, err.Error(), "error saving file")
+		fmt.Println(err.Error())
 		return
 	} else { fmt.Println("[imgPost][" + uid + "] saved to database successfully") }
 }
@@ -77,7 +103,7 @@ func checkImage(r io.ReadSeeker) (string, bool) {
 	_, err2 := r.Seek(0, 0)
 	if err != nil || err2 != nil {
 		return "", false
-	}
+	} 
 	return fmt, true
 }
 
@@ -127,7 +153,10 @@ func init() {
 	/////////////////////////////////////
 
 	/////////// init databases //////////
-	imgDB, _ = bitcask.Open("img.db")
+	opts := []bitcask.Option {
+		bitcask.WithMaxValueSize(16 / 1024 / 1024),
+	}
+	imgDB, _ = bitcask.Open("img.db", opts...)
 	fmt.Println("Opening img.db")
 
 	txtDB, _ = bitcask.Open("txt.db")
@@ -136,8 +165,6 @@ func init() {
 	urlDB, _ = bitcask.Open("url.db")
 	fmt.Println("Opening url.db")
 	////////////////////////////////////
-
-
 }
 
 
@@ -150,7 +177,7 @@ func main() {
 	imgR := router.Group("/i")
 	{
 		imgR.POST("/put", imgPost)
-		imgR.GET("/test", imgTest)
+		imgR.GET("/:uid", imgView)
 	}
 
 	txtR := router.Group("/t")
