@@ -97,7 +97,7 @@ func imgPost(c *gin.Context) {
 	Hashr.Write(Scrubbed)
 	hash := Hashr.Sum(nil)
 
-	fmt.Println("[imgPost][" + uid + "] " + string(hash))
+	fmt.Printf("[imgPost][%d] MD5: %x\n", uid, hash)
 
 	fmt.Println("[imgPost][" + uid + "] Checking for duplicate's in database")
 
