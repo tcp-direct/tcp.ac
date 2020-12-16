@@ -62,6 +62,8 @@ func imgView(c *gin.Context) {
 
 
 func imgPost(c *gin.Context) {
+	var Scrubbed []byte
+
 	f, err := c.FormFile("upload")
 	if err != nil {
 		errThrow(c, http.StatusBadRequest, err.Error(), "no file detected within request")
@@ -84,12 +86,18 @@ func imgPost(c *gin.Context) {
 	fmt.Println("[imgPost] generating uid")
 	uid := gouid.String(5)
 
-	fmt.Println("[imgPost][" + uid + "] dumping byte form of file and scrubbing exif")
+	fmt.Println("[imgPost][" + uid + "] dumping byte form of file")
 	fbytes, err := ioutil.ReadAll(file)
-	Scrubbed, err := exifremove.Remove(fbytes)
-	if err != nil {
-		errThrow(c, http.StatusInternalServerError, err.Error(), "error scrubbing exif")
-		return
+	if imageFormat != "gif" {
+		fmt.Println("[imgPost][" + uid + "] scrubbing exif")
+		Scrubbed, err = exifremove.Remove(fbytes)
+		if err != nil {
+			errThrow(c, http.StatusInternalServerError, err.Error(), "error scrubbing exif")
+			return
+		}
+	} else {
+		fmt.Println("[imgPost][" + uid + "] skipping exif scrub for gif image")
+		Scrubbed = fbytes
 	}
 
 	fmt.Println("[imgPost][" + uid + "] calculating MD5 hash")
