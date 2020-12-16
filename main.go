@@ -107,7 +107,7 @@ func imgPost(c *gin.Context) {
 		fmt.Println("[imgPost][" + uid + "] no dupes found, storing md5 hash into md5 database with callback uid")
 		md5DB.Put([]byte(hash),[]byte(uid))
 	} else {
-		fmt.Println("[imgPost][" + uid + "] duplicate file found in md5 database, returning URL for uid: " + string(imgRef))
+		fmt.Println("[imgPost][" + string(imgRef) + "] duplicate file found in md5 database, returning URL for uid: " + string(imgRef))
 		c.String(200,baseUrl + "i/" + string(imgRef) + "\n")
 		return
 	}
