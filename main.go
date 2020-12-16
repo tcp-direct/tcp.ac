@@ -1,3 +1,4 @@
+
 package main
 
 import (
@@ -8,6 +9,7 @@ import (
 	"github.com/twharmon/gouid"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
+	"crypto/md5"
 	"net/http"
 	"image"
 	"bytes"
@@ -17,9 +19,11 @@ import (
 )
 
 var imgDB *bitcask.Bitcask
+var md5DB *bitcask.Bitcask
 var urlDB *bitcask.Bitcask
 var txtDB *bitcask.Bitcask
 var errLog *log.Logger
+var baseUrl string = "https://tcp.ac/"
 var debugBool bool = true
 
 func errThrow(c *gin.Context, respcode int, Error string, msg string) {
@@ -72,12 +76,12 @@ func imgPost(c *gin.Context) {
 	fmt.Println("[imgPost] verifying file is an image")
 	imageFormat, ok := checkImage(file)
 	if !ok {
-		errThrow(c, http.StatusBadRequest, err.Error(), "input does not appear to be an image")
+		errThrow(c, http.StatusBadRequest, "400", "input does not appear to be an image")
 		return
 	} else { fmt.Println("[imgPost] " + imageFormat + " detected") }
 
 	fmt.Println("[imgPost] generating uid")
-	uid := gouid.String(8)
+	uid := gouid.String(4)
 
 	fmt.Println("[imgPost][" + uid + "] dumping byte form of file and scrubbing exif")
 	fbytes, err := ioutil.ReadAll(file)
@@ -87,7 +91,28 @@ func imgPost(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("[imgPost][" + uid + "] saving file to database (fin)")
+	fmt.Println("[imgPost][" + uid + "] calculating MD5 hash")
+
+	Hashr := md5.New()
+	Hashr.Write(Scrubbed)
+	hash := Hashr.Sum(nil)
+
+	fmt.Println("[imgPost][" + uid + "] " + string(hash))
+
+	fmt.Println("[imgPost][" + uid + "] Checking for duplicate's in database")
+
+	imgRef, _ := md5DB.Get(hash)
+
+	if imgRef == nil {
+		fmt.Println("[imgPost][" + uid + "] no dupes found, storing md5 hash into md5 database with callback uid")
+		md5DB.Put([]byte(hash),[]byte(uid))
+	} else {
+		fmt.Println("[imgPost][" + uid + "] duplicate file found in md5 database, returning URL for uid: " + string(imgRef))
+		c.String(200,baseUrl + "i/" + string(imgRef))
+		return
+	}
+
+	fmt.Println("[imgPost][" + uid + "] saving file to database")
 
 	err = imgDB.Put([]byte(uid), []byte(Scrubbed))
 
@@ -95,7 +120,9 @@ func imgPost(c *gin.Context) {
 		errThrow(c, http.StatusInternalServerError, err.Error(), "error saving file")
 		fmt.Println(err.Error())
 		return
-	} else { fmt.Println("[imgPost][" + uid + "] saved to database successfully") }
+	} else {
+		fmt.Println("[imgPost][" + uid + "] saved to database successfully, returning new URL")
+	}
 }
 
 func checkImage(r io.ReadSeeker) (string, bool) {
@@ -158,6 +185,9 @@ func init() {
 	}
 	imgDB, _ = bitcask.Open("img.db", opts...)
 	fmt.Println("Opening img.db")
+
+	md5DB, _ = bitcask.Open("md5.db", opts...) // this will probably only be for images
+	fmt.Println("Opening md5.db")
 
 	txtDB, _ = bitcask.Open("txt.db")
 	fmt.Println("Opening txt.db")
