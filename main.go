@@ -108,7 +108,7 @@ func imgPost(c *gin.Context) {
 		md5DB.Put([]byte(hash),[]byte(uid))
 	} else {
 		fmt.Println("[imgPost][" + uid + "] duplicate file found in md5 database, returning URL for uid: " + string(imgRef))
-		c.String(200,baseUrl + "i/" + string(imgRef))
+		c.String(200,baseUrl + "i/" + string(imgRef) + "\n")
 		return
 	}
 
@@ -122,6 +122,7 @@ func imgPost(c *gin.Context) {
 		return
 	} else {
 		fmt.Println("[imgPost][" + uid + "] saved to database successfully, returning new URL")
+		c.String(200,baseUrl + "i/" + string(uid) + "\n")
 	}
 }
 
