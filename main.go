@@ -8,8 +8,9 @@ import (
 	"github.com/prologic/bitcask"
 	"github.com/twharmon/gouid"
 	"github.com/gin-gonic/gin"
-	"io/ioutil"
+	_ "image/gif"
 	"crypto/md5"
+	"io/ioutil"
 	"net/http"
 	"image"
 	"bytes"
@@ -182,7 +183,7 @@ func init() {
 
 	/////////// init databases //////////
 	opts := []bitcask.Option {
-		bitcask.WithMaxValueSize(16 / 1024 / 1024),
+		bitcask.WithMaxValueSize(24 / 1024 / 1024),
 	}
 	imgDB, _ = bitcask.Open("img.db", opts...)
 	fmt.Println("Opening img.db")
