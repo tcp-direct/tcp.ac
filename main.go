@@ -81,7 +81,7 @@ func imgPost(c *gin.Context) {
 	} else { fmt.Println("[imgPost] " + imageFormat + " detected") }
 
 	fmt.Println("[imgPost] generating uid")
-	uid := gouid.String(4)
+	uid := gouid.String(5)
 
 	fmt.Println("[imgPost][" + uid + "] dumping byte form of file and scrubbing exif")
 	fbytes, err := ioutil.ReadAll(file)
