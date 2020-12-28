@@ -9,7 +9,7 @@ import (
 )
 
 var imgDB *bitcask.Bitcask
-var md5DB *bitcask.Bitcask
+var hashDB *bitcask.Bitcask
 var keyDB *bitcask.Bitcask
 var urlDB *bitcask.Bitcask
 var txtDB *bitcask.Bitcask
@@ -65,7 +65,7 @@ func init() {
 	imgDB, _ = bitcask.Open("./data/img", opts...)
 	fmt.Println("Initializing img database")
 
-	md5DB, _ = bitcask.Open("./data/md5", opts...) // this will probably only be for images
+	hashDB, _ = bitcask.Open("./data/hsh", opts...) // this will probably only be for images
 	fmt.Println("Initializing md5 database")
 
 	txtDB, _ = bitcask.Open("./data/txt")
@@ -87,6 +87,11 @@ func main() {
 	{
 		imgR.POST("/put", imgPost)
 		imgR.GET("/:uid", imgView)
+	}
+
+	delR := router.Group("/d")
+	{
+		delR.GET("/i/:key", imgDel)
 	}
 
 	txtR := router.Group("/t")
