@@ -1,30 +1,20 @@
-
 package main
 
 import (
-	valid "github.com/asaskevich/govalidator"
-	"github.com/scottleedavis/go-exif-remove"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"github.com/prologic/bitcask"
-	"github.com/twharmon/gouid"
 	"github.com/gin-gonic/gin"
-	_ "image/gif"
-	"crypto/md5"
-	"io/ioutil"
-	"net/http"
-	"image"
-	"bytes"
 	"fmt"
 	"log"
-	"io"
 )
 
 var imgDB *bitcask.Bitcask
 var md5DB *bitcask.Bitcask
+var keyDB *bitcask.Bitcask
 var urlDB *bitcask.Bitcask
 var txtDB *bitcask.Bitcask
 var errLog *log.Logger
-var baseUrl string = "https://tcp.ac/"
+var baseUrl string = "http://127.0.0.1:8081/"
 var debugBool bool = true
 
 func errThrow(c *gin.Context, respcode int, Error string, msg string) {
@@ -32,130 +22,6 @@ func errThrow(c *gin.Context, respcode int, Error string, msg string) {
 	if debugBool {
 		c.String(respcode, msg)
 	}
-}
-
-func imgView(c *gin.Context) {
-	rUid := c.Param("uid")
-	fmt.Println("[imgView] Received request")
-	if (valid.IsAlphanumeric(rUid)) {
-		fmt.Println("[imgView][" + rUid + "] Request validated")
-		fBytes, _ := imgDB.Get([]byte(rUid))
-		if fBytes == nil {
-			fmt.Println("[imgView] No data found for: " + rUid)
-			errThrow(c, 404, "404", "File not found")
-			return
-		}
-
-		fmt.Println("[imgView][" + rUid + "] Detecting image type")
-		file := bytes.NewReader(fBytes)
-		imageFormat, ok := checkImage(file)
-	        if !ok {
-			errThrow(c, http.StatusBadRequest, "bad request", "content does not appear to be an image")
-			return
-		} else { fmt.Println("[imgView][" + rUid + "] " + imageFormat + " detected") }
-
-		contentType := "image/" + imageFormat
-
-		c.Data(200, contentType, fBytes)
-	}
-}
-
-
-func imgPost(c *gin.Context) {
-	var Scrubbed []byte
-
-	f, err := c.FormFile("upload")
-	if err != nil {
-		errThrow(c, http.StatusBadRequest, err.Error(), "no file detected within request")
-	}
-
-	fmt.Println("[imgPost] detected new upload: " + f.Filename)
-
-	file, err := f.Open()
-	if err != nil {
-		errThrow(c, http.StatusInternalServerError, err.Error(), "error processing file")
-	}
-
-	fmt.Println("[imgPost] verifying file is an image")
-	imageFormat, ok := checkImage(file)
-	if !ok {
-		errThrow(c, http.StatusBadRequest, "400", "input does not appear to be an image")
-		return
-	} else { fmt.Println("[imgPost] " + imageFormat + " detected") }
-
-	fmt.Println("[imgPost] generating uid")
-	uid := gouid.String(5)
-
-	fmt.Println("[imgPost][" + uid + "] dumping byte form of file")
-	fbytes, err := ioutil.ReadAll(file)
-	if imageFormat != "gif" {
-		fmt.Println("[imgPost][" + uid + "] scrubbing exif")
-		Scrubbed, err = exifremove.Remove(fbytes)
-		if err != nil {
-			errThrow(c, http.StatusInternalServerError, err.Error(), "error scrubbing exif")
-			return
-		}
-	} else {
-		fmt.Println("[imgPost][" + uid + "] skipping exif scrub for gif image")
-		Scrubbed = fbytes
-	}
-
-	fmt.Println("[imgPost][" + uid + "] calculating MD5 hash")
-
-	Hashr := md5.New()
-	Hashr.Write(Scrubbed)
-	hash := Hashr.Sum(nil)
-
-	fmt.Printf("[imgPost][%s] MD5: %x\n", uid, hash)
-
-	fmt.Println("[imgPost][" + uid + "] Checking for duplicate's in database")
-
-	imgRef, _ := md5DB.Get(hash)
-
-	if imgRef == nil {
-		fmt.Println("[imgPost][" + uid + "] no dupes found, storing md5 hash into md5 database with callback uid")
-		md5DB.Put([]byte(hash),[]byte(uid))
-	} else {
-		fmt.Println("[imgPost][" + string(imgRef) + "] duplicate file found in md5 database, returning URL for uid: " + string(imgRef))
-		c.String(200,baseUrl + "i/" + string(imgRef) + "\n")
-		return
-	}
-
-	fmt.Println("[imgPost][" + uid + "] saving file to database")
-
-	err = imgDB.Put([]byte(uid), []byte(Scrubbed))
-
-	if err != nil {
-		errThrow(c, http.StatusInternalServerError, err.Error(), "error saving file")
-		fmt.Println(err.Error())
-		return
-	} else {
-		fmt.Println("[imgPost][" + uid + "] saved to database successfully, returning new URL")
-		c.String(200,baseUrl + "i/" + string(uid) + "\n")
-	}
-}
-
-func checkImage(r io.ReadSeeker) (string, bool) {
-	_, fmt, err := image.Decode(r)
-	_, err2 := r.Seek(0, 0)
-	if err != nil || err2 != nil {
-		return "", false
-	} 
-	return fmt, true
-}
-
-func getSize(s io.Seeker) (size int64, err error) {
-	if _, err = s.Seek(0, 0); err != nil {
-		return
-	}
-
-	// 2 == from the end of the file
-	if size, err = s.Seek(0, 2); err != nil {
-		return
-	}
-
-	_, err = s.Seek(0, 0)
-	return
 }
 
 //////////////////////////////////////////////////////
@@ -193,17 +59,20 @@ func init() {
 	opts := []bitcask.Option {
 		bitcask.WithMaxValueSize(24 / 1024 / 1024),
 	}
-	imgDB, _ = bitcask.Open("img.db", opts...)
-	fmt.Println("Opening img.db")
+	keyDB, _ = bitcask.Open("./data/key", opts...)
+	fmt.Println("Initializing key database")
 
-	md5DB, _ = bitcask.Open("md5.db", opts...) // this will probably only be for images
-	fmt.Println("Opening md5.db")
+	imgDB, _ = bitcask.Open("./data/img", opts...)
+	fmt.Println("Initializing img database")
 
-	txtDB, _ = bitcask.Open("txt.db")
-	fmt.Println("Opening txt.db")
+	md5DB, _ = bitcask.Open("./data/md5", opts...) // this will probably only be for images
+	fmt.Println("Initializing md5 database")
 
-	urlDB, _ = bitcask.Open("url.db")
-	fmt.Println("Opening url.db")
+	txtDB, _ = bitcask.Open("./data/txt")
+	fmt.Println("Initializing txt database")
+
+	urlDB, _ = bitcask.Open("./data/url")
+	fmt.Println("Initializing url database")
 	////////////////////////////////////
 }
 
