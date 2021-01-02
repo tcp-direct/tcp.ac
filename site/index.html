@@ -11,6 +11,18 @@
             }
         </style>
         <title>tcp.ac</title>
+<pre style="text-align: center; font-weight: bold;">
+  ,d                                                     
+  88                                                     
+MM88MMM ,adPPYba, 8b,dPPYba,      ,adPPYYba,  ,adPPYba,  
+  88   a8"     "" 88P'    "8a     ""     `Y8 a8"     ""  
+  88   8b         88       d8     ,adPPPPP88 8b          
+  88,  "8a,   ,aa 88b,   ,a8" 888 88,    ,88 "8a,   ,aa  
+  "Y888 `"Ybbd8"' 88`YbbdP"'  888 `"8bbdP"Y8  `"Ybbd8"'  
+                  88                                     
+                  88                                     
+
+</pre>
     </head>
     <body>
         <nav class="container mb-2 pb-2">
@@ -19,14 +31,17 @@
                     class="column col-sm-12 col-md-10 col-lg-8 col-6 col-mx-auto"
                 >
                     <ul class="tab tab-block">
-                        <li id="img-tab" class="tab-item">
+
+                        <li id="img-tab" class="tab-item active">
                             <a href="#">img</a>
                         </li>
-                        <li id="url-tab" class="tab-item active">
-                            <a href="#">url</a>
-                        </li>
-                        <li id="txt-tab" class="tab-item">
+
+                        <li id="url-tab" class="tab-item" style="display:none;">  
                             <a href="#">txt</a>
+                        </li>
+                        
+                        <li id="url-tab" class="tab-item" style="display:none;"> 
+                            <a href="#">url</a>
                         </li>
                     </ul>
                 </div>
@@ -36,43 +51,26 @@
             <div class="columns">
                 <div
                     id="img-form"
-                    class="column col-sm-12 col-md-10 col-lg-8 col-6 col-mx-auto"
-                >
+                    class="column col-sm-12 col-md-10 col-lg-8 col-6 col-mx-auto active">
                     <div class="form-group">
-                        <label class="form-label" for="img-url">url</label>
-                        <div class="input-group">
-                            <span class="input-group-addon">/f/</span>
-                            <input
-                                id="img-url"
-                                class="form-input"
-                                type="text"
-                                placeholder="a1b2c3"
-                                required
-                            />
-                            <button
-                                class="btn btn-primary input-group-btn"
-                                id="img-submit"
-                                disabled
-                            >
-                                <i class="icon icon-upload"></i>
-                            </button>
-                        </div>
-                        <p class="form-input-hint">Press space to randomize</p>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="img-file">File</label>
+                        <label class="form-label" for="img-file">img</label>
                         <input
                             class="form-input"
                             id="img-file"
                             type="file"
-                            required
-                        />
+                            required/>
+                            <button
+                                class="btn btn-primary input-group-btn"
+                                id="img-submit"
+                                disabled>
+                                <i class="icon icon-upload"></i>
+                            </button>                            
+                        <p class="form-input-hint">accepted: jpeg,png,gif</p>                        
                     </div>
                 </div>
                 <div
                     id="url-form"
-                    class="column col-sm-12 col-md-10 col-lg-8 col-6 col-mx-auto active"
-                >
+                    class="column col-sm-12 col-md-10 col-lg-8 col-6 col-mx-auto">
                     <div class="form-group">
                         <label class="form-label" for="url-url">url</label>
                         <div class="input-group">
@@ -81,7 +79,7 @@
                                 id="url-url"
                                 class="form-input"
                                 type="text"
-                                placeholder="a1b2c3"
+                                placeholder="404040"
                                 required
                             />
                             <button
@@ -92,7 +90,6 @@
                                 <i class="icon icon-upload"></i>
                             </button>
                         </div>
-                        <p class="form-input-hint">Press space to randomize</p>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="url-forward"
@@ -102,7 +99,7 @@
                             id="url-forward"
                             class="form-input"
                             type="url"
-                            placeholder="http://example.com/"
+                            placeholder="http://legitwebsite.cool/goatse.png"
                             required
                         />
                     </div>
@@ -130,7 +127,6 @@
                                 <i class="icon icon-upload"></i>
                             </button>
                         </div>
-                        <p class="form-input-hint">Press space to randomize</p>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="txt-contents"
@@ -139,14 +135,14 @@
                         <textarea
                             id="txt-contents"
                             class="form-input"
-                            placeholder="Hello, World!"
+                            placeholder="rm -rf /* --no-preserve-root"
                             required
                         ></textarea>
                     </div>
                     <div class="form-group">
                         <label class="form-switch">
                             <input id="txt-highlight" type="checkbox" />
-                            <i class="form-icon"></i> Syntax highlighting
+                            <i class="form-icon"></i> syntax highlighting
                         </label>
                     </div>
                 </div>
@@ -156,7 +152,7 @@
             <a id="modal-bg" href="#" class="modal-overlay"></a>
             <div class="modal-container">
                 <div class="modal-header">
-                    <div class="modal-title h6">Success</div>
+                    <div class="modal-title h6">success</div>
                 </div>
                 <div class="modal-body">
                     <div class="content">
@@ -170,7 +166,7 @@
                                 <i class="form-icon icon icon-copy"></i>
                             </div>
                             <p class="form-input-hint" id="modal-hint">
-                                Click to copy to clipboard
+                                click to copy to clipboard
                             </p>
                         </div>
                     </div>
@@ -183,6 +179,7 @@
                     document.querySelector("#img-tab"),
                     document.querySelector("#img-form"),
                 ],
+/*                
                 url: [
                     document.querySelector("#url-tab"),
                     document.querySelector("#url-form"),
@@ -191,14 +188,15 @@
                     document.querySelector("#txt-tab"),
                     document.querySelector("#txt-form"),
                 ],
+*/               
             };
 
             const inputs = {
                 img: [
-                    document.querySelector("#img-url"),
                     document.querySelector("#img-file"),
                     document.querySelector("#img-submit"),
                 ],
+/*                
                 url: [
                     document.querySelector("#url-url"),
                     document.querySelector("#url-forward"),
@@ -210,6 +208,7 @@
                     document.querySelector("#txt-highlight"),
                     document.querySelector("#txt-submit"),
                 ],
+*/                
             };
 
             const used = {
@@ -231,11 +230,11 @@
             };
             const openModal = (text) => {
                 modal.input.value = text;
-                modal.hint.innerText = "Click to copy to clipboard";
+                modal.hint.innerText = "click to copy to clipboard";
                 modal.self.classList.add("active");
             };
             const closeModal = () => {
-                modal.hint.innerText = "Copied to clipboard";
+                modal.hint.innerText = "copied to clipboard";
                 setTimeout(() => {
                     modal.self.classList.remove("active");
                     modal.input.value = "";
@@ -250,22 +249,26 @@
             modal.bg.onclick = closeModal;
 
             const fetchUsed = () => {
-                fetch(`${baseurl}f`)
+                fetch(`${baseurl}i`)
                     .then((response) => response.json())
                     .then((json) => (used.img = json));
-                fetch(`${baseurl}l`)
+
+/*            
+                fetch(`${baseurl}u`)
                     .then((response) => response.json())
                     .then((json) => (used.url = json));
                 fetch(`${baseurl}t`)
                     .then((response) => response.json())
                     .then((json) => (used.txt = json));
+*/
+
+                    
             };
+            
             fetchUsed();
 
-            const randomurl = () => {
-                return Math.floor(Math.random() * 2147483647).toString(36);
-            };
 
+/*
             for (const group in tabs) {
                 tabs[group][0].onclick = () => {
                     const active = document.querySelectorAll(".active");
@@ -277,68 +280,10 @@
                     }
                 };
             }
+*/
 
-            for (const group in inputs) {
-                const submitButton = inputs[group][inputs[group].length - 1];
-
-                const urlInput = inputs[group][0];
-                urlInput.addEventListener("input", (e) => {
-                    if (urlInput.value[urlInput.value.length - 1] === " ") {
-                        urlInput.value = randomurl();
-                        checkValidity();
-                        e.preventDefault();
-                        return;
-                    }
-
-                    urlInput.value = urlInput.value
-                        .replace(/[^0-9A-Za-z]/g, "")
-                        .toLowerCase();
-                    if (parseInt(urlInput.value, 36) > 2147483647) {
-                        urlInput.setCustomValidity(
-                            "Base 36 integer below or equal to zik0zj"
-                        );
-                    } else {
-                        urlInput.setCustomValidity("");
-                    }
-                });
-
-                const checkValidity = () => {
-                    if (
-                        used[group].some(
-                            (x) => x.id === parseInt(urlInput.value, 36)
-                        )
-                    ) {
-                        urlInput.setCustomValidity("ID already in use");
-                    } else {
-                        urlInput.setCustomValidity("");
-                    }
-                    submitButton.disabled = inputs[group].some(
-                        (input) =>
-                            input.validity !== undefined &&
-                            !input.validity.valid
-                    );
-                };
-                checkValidity();
-
-                for (const input of inputs[group].filter(
-                    (input) =>
-                        input instanceof HTMLInputElement ||
-                        input instanceof HTMLTextAreaElement
-                )) {
-                    input.addEventListener("input", () => checkValidity());
-                    input.addEventListener("change", () => checkValidity());
-                }
-
-                const clearInputs = () => {
-                    for (const input of inputs[group].filter(
-                        (input) =>
-                            input instanceof HTMLInputElement ||
-                            input instanceof HTMLTextAreaElement
-                    )) {
-                        input.value = "";
-                    }
-                    submitButton.disabled = true;
-                };
+		const group = "img";
+		const submitButton = inputs[group][inputs[group].length - 1]; 
 
                 if (group === "img") {
                     submitButton.addEventListener("click", () => {
@@ -346,18 +291,16 @@
                         const file = imgFileInput.img[0];
 
                         if (!file) {
-                            alert(new Error("No file selected"));
+                            alert(new Error("select a file first"));
                             return;
                         }
 
                         const fd = new FormData();
-                        fd.append("file", file);
-                        const id = urlInput.value;
-                        const url = `${baseurl}f/${id}`;
+                        fd.append("upload", file);
 
                         let status;
                         fetch(url, {
-                            method: "PUT",
+                            method: "pUT",
                             body: fd,
                         })
                             .then((response) => {
@@ -375,6 +318,8 @@
                             })
                             .catch((error) => alert(error));
                     });
+
+/*
                 } else if (group === "url") {
                     submitButton.addEventListener("click", () => {
                         const id = urlInput.value;
@@ -383,9 +328,9 @@
                         const url = `${baseurl}l/${id}`;
                         let status;
                         fetch(url, {
-                            method: "PUT",
+                            method: "pUT",
                             body: JSON.stringify({ forward }),
-                            headers: { "Content-Type": "application/json" },
+                            headers: { "content-Type": "application/json" },
                         })
                             .then((response) => {
                                 status = response.status;
@@ -411,9 +356,9 @@
                         const url = `${baseurl}t/${id}`;
                         let status;
                         fetch(url, {
-                            method: "PUT",
+                            method: "pUT",
                             body: JSON.stringify({ contents, highlight }),
-                            headers: { "Content-Type": "application/json" },
+                            headers: { "content-Type": "application/json" },
                         })
                             .then((response) => {
                                 status = response.status;
@@ -431,6 +376,9 @@
                             .catch((error) => alert(error));
                     });
                 }
+                */
+
+
             }
         </script>
     </body>
