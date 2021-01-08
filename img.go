@@ -25,26 +25,25 @@ type Post struct {
 }
 
 func postUpload(c *gin.Context, id string, key string) {
-                imgurl := baseUrl + "i/" + string(id)
-		keyurl := "image_is_duplicate"
-		if key != "nil" { keyurl = baseUrl + "d/i/" + string(key) }
+	imgurl := baseUrl + "i/" + string(id)
+	keyurl := "duplicate"
+	if key != "nil" { keyurl = baseUrl + "d/i/" + string(key) }
 
-		d := Post{
-			Imgurl: imgurl,
-			Delkey: keyurl,
-		}
+	d := Post{
+		Imgurl: imgurl,
+		Delkey: keyurl,
+	}
 
+	var p []byte
+	p, err := json.Marshal(d)
+        if err != nil {
+		errThrow(c, http.StatusInternalServerError, err.Error(), "internal error")
+		return
+	}
 
-                var p []byte
-                p, err := json.Marshal(d)
-                if err != nil {
-                        errThrow(c, http.StatusInternalServerError, err.Error(), "internal error")
-                        return
-                }
-
-		fmt.Println("[imgPost]["+id+"] Success: " + imgurl + " " + keyurl)
-                c.JSON(200, string(p))
-                return
+	fmt.Println("[imgPost]["+id+"] Success: " + imgurl + " " + keyurl)
+	c.JSON(201, string(p))
+	return
 }
 
 func imgDel(c *gin.Context) {
