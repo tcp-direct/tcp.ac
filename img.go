@@ -5,6 +5,7 @@ import(
 	exifremove "github.com/scottleedavis/go-exif-remove"
 	"golang.org/x/crypto/blake2b"
 	"github.com/twharmon/gouid"
+	"github.com/rs/zerolog/log"
 	"github.com/gin-gonic/gin"
 	_ "image/gif"
 	"io/ioutil"
@@ -12,7 +13,6 @@ import(
 	"strings"
 	"image"
 	"bytes"
-	"fmt"
 	"io"
 )
 
@@ -34,19 +34,19 @@ func postUpload(c *gin.Context, id string, key string) {
 }
 
 func imgDel(c *gin.Context) {
-	f = imgDel
+	fn = "imgDel"
 
-	wlog.Debug().Str("func",imgDel).Msg("Request received!") // received request
+	log.Debug().Str("func",fn).Msg("Request received!") // received request
 	rKey := c.Param("key")
 	if (len(rKey) != 16 || !valid.IsAlphanumeric(rKey)) {
-		log.Error().Str("func",f).Msg("delete request failed sanity check!")
+		log.Error().Str("func",fn).Msg("delete request failed sanity check!")
 		errThrow(c, 400, "400", "400")
 		return
 	}
 
 	targetImg, _ := keyDB.Get([]byte(rKey))
 	if (targetImg == nil || !strings.Contains(string(targetImg), "i.")) {
-		log.Error().Str("func",f).Str("rkey",rKey).Msg("no img delete entry found with provided key")
+		log.Error().Str("func",fn).Str("rkey",rKey).Msg("no img delete entry found with provided key")
 		errThrow(c, 400, "400", "400")
 		return
 	}
@@ -54,28 +54,28 @@ func imgDel(c *gin.Context) {
 	finalTarget := strings.Split(string(targetImg), ".")
 
 	if !imgDB.Has([]byte(finalTarget[1])) {
-		log.Error().Str("func",f).Str("rkey",rKey).Msg("corresponding image not found in database!")
+		log.Error().Str("func",fn).Str("rkey",rKey).Msg("corresponding image not found in database!")
 		errThrow(c, 500, "500", "500") // this shouldn't happen...?
 		return
 	}
 	err := imgDB.Delete([]byte(finalTarget[1]))
 	if err != nil {
-		log.Error().Str("func",f).Str("rkey",finalTarget[1]).Msg("delete failed!")
+		log.Error().Str("func",fn).Str("rkey",finalTarget[1]).Msg("delete failed!")
 		errThrow(c, 500, "500", "500")
 		return
 	}
 
 	if imgDB.Has([]byte(finalTarget[1])) {
-		log.Error().Str("func",f).Str("rkey",finalTarget[1]).Msg("delete failed!?")
+		log.Error().Str("func",fn).Str("rkey",finalTarget[1]).Msg("delete failed!?")
 		errThrow(c, 500, "500", "500")
 		return
 	}
 
-	log.Info().Str("func",f).Str("rkey",finalTarget[1]).Msg("Image file deleted successfully")
-	log.Debug().Str("func",f).Str("rkey",finalTarget[1]).Msg("Removing delete key entry")
+	log.Info().Str("func",fn).Str("rkey",finalTarget[1]).Msg("Image file deleted successfully")
+	log.Debug().Str("func",fn).Str("rkey",finalTarget[1]).Msg("Removing delete key entry")
 	err = keyDB.Delete([]byte(rKey))
 	if err != nil {
-		log.Error().Str("func",f).Str("rkey",finalTarget[1]).Msg("Couldn't delete key")
+		log.Error().Str("func",fn).Str("rkey",finalTarget[1]).Msg("Couldn't delete key")
   										   // it would be insane to try and delete the hash here
 	}		    							  // if someone is uploading this image again after del
 	c.JSON(200, "DELETE_SUCCESS")						 // and the file corresponding to the hash no longer exists
@@ -84,16 +84,16 @@ func imgDel(c *gin.Context) {
 
 
 func imgView(c *gin.Context) {
-	f = imgView
+	fn = "imgView"
 			 							 // the user can access their image with or without a file extension in URI
-	log.Debug().Str("func",f).Msg("request received")		  	//  however it must be a valid extension (more checks further down)
+	log.Debug().Str("func",fn).Msg("request received")		  	//  however it must be a valid extension (more checks further down)
 	sUid := strings.Split(c.Param("uid"), ".")
 	rUid := sUid[0]
 	if len(sUid) > 1 {
 		fExt = strings.ToLower(sUid[1])
-		log.Debug().Str("func",f).Str("ext",fExt).Msg("detected file extension")
+		log.Debug().Str("func",fn).Str("ext",fExt).Msg("detected file extension")
 		if (fExt != "png" && fExt != "jpg" && fExt != "jpeg" && fExt != "gif") {
-			log.Info().Str(()"[imgView] Bad file extension!")
+			log.Error().Str("func", fn).Msg("Bad file extension!")
 			errThrow(c, 400, "400", "400")
 			return
 		}
@@ -101,30 +101,32 @@ func imgView(c *gin.Context) {
 
 
 	if (!valid.IsAlphanumeric(rUid) || len(rUid) < 3 || len(rUid) > 16) {
-		log.Info().Str(()"[imgView] request discarded as invalid")    // these limits should be variables eventually
+		log.Error().Str("func",fn).Msg("request discarded as invalid")    // these limits should be variables eventually
 		errThrow(c,400,"400", "400")
 		return
 	}
 
-	log.Info().Str(()"[imgView][" + rUid + "] Request validated")	 // now that we think its a valid request we will query
+	log.Debug().Str("func",fn).Str("rUid",rUid).Msg("request validated")	 // now that we think its a valid request we will query
 
 	fBytes, _ := imgDB.Get([]byte(rUid))
 	if fBytes == nil {
-		log.Info().Str(()"[imgView] No data found for: " + rUid)
+		log.Error().Str("func",fn).Str("rUid",rUid).Msg("no corresponding file for this id")
 		errThrow(c, 404, "404", "File not found")
 		return
 	}
 
-	log.Info().Str(()"[imgView][" + rUid + "] Detecting image type")	// not sure how a non image would get uploaded
-	file := bytes.NewReader(fBytes)					// however, better safe than sorry
+
+
+	file := bytes.NewReader(fBytes)
 	imageFormat, ok := checkImage(file)
         if !ok {
-		errThrow(c, http.StatusBadRequest, "400", "content does not appear to be an image")
-		return
-	} else { log.Info().Str(()"[imgView][" + rUid + "] " + imageFormat + " detected") }
+		errThrow(c, http.StatusBadRequest, "400", "400")
+		log.Error().Str("func",fn).Str("rUid",rUid).Msg("the file we grabbed is not an image!?")	// not sure how a non image would get uploaded
+		return											       //  however, better safe than sorry
+	} else { log.Debug().Str("func",fn).Str("rUid",rUid).Str("imageFormat",imageFormat).Msg("Image format detected") }
 
 	if (fExt != "nil" && fExt != imageFormat) {			// additional extension sanity check
-		log.Info().Str(()"[imgView][" + rUid + "] given file extension does not match filetype " + imageFormat)
+		log.Error().Str("func",fn).Str("rUid",rUid).Msg("requested file extension does not match filetype")
 		errThrow(c,400,"400", "400")
 		return
 	}
@@ -133,10 +135,13 @@ func imgView(c *gin.Context) {
 									// we give them the proper content type
 	c.Data(200, contentType, fBytes)
 
+	log.Info().Str("func",fn).Str("rUid",rUid).Msg("Successful upload")
 }
 
 
 func imgPost(c *gin.Context) {
+	fn = "imgPost"
+
 	var Scrubbed []byte
 
 	f, err := c.FormFile("upload")
@@ -144,76 +149,77 @@ func imgPost(c *gin.Context) {
 		errThrow(c, http.StatusBadRequest, err.Error(), "400") // 400 bad request
 	}							       // incoming POST data is invalid
 
-	log.Info().Str(()"[imgPost] detected new upload: " + f.Filename)
+	log.Debug().Str("func",fn).Str("filename",f.Filename).Msg("[+] New upload")
 
 	file, err := f.Open()
 	if err != nil {
 		errThrow(c, http.StatusInternalServerError, err.Error(), "error processing file\n")
 	}
 
-	log.Info().Str(()"[imgPost] verifying file is an image")
+	log.Debug().Str("func",fn).Msg("verifying file is an image")
 	imageFormat, ok := checkImage(file)
 	if !ok {
 		errThrow(c, http.StatusBadRequest, "400", "input does not appear to be an image")
 		return
-	} else { log.Info().Str(()"[imgPost] " + imageFormat + " detected") }
+	} else { log.Debug().Str("func",fn).Msg("image file type detected") }
 
-	log.Info().Str(()"[imgPost] dumping byte form of file")
+	log.Debug().Str("func",fn).Msg("dumping byte form of file")
 	fbytes, err := ioutil.ReadAll(file)
 	if imageFormat != "gif" {
-		log.Info().Str(()"[imgPost] scrubbing exif")
+		log.Debug().Str("func",fn).Err(err).Msg("error scrubbing exif")
 		Scrubbed, err = exifremove.Remove(fbytes)
 		if err != nil {
 			errThrow(c, http.StatusInternalServerError, err.Error(), "error scrubbing exif")
 			return
 		}
 	} else {
-		log.Info().Str(()"[imgPost] skipping exif scrub for gif image")
+		log.Debug().Str("func",fn).Msg("skipping exif scrub for gif image")
 		Scrubbed = fbytes
 	}
 
-	log.Info().Str(()"[imgPost] calculating blake2b checksum")
+	log.Debug().Str("func",fn).Msg("calculating blake2b checksum")
 
 	Hashr, _ := blake2b.New(64,nil)
 	Hashr.Write(Scrubbed)
 	hash := Hashr.Sum(nil)
 
-	log.Info().Str(()"[imgPost] Checking for duplicate's in database")
+	log.Debug().Str("func",fn).Msg("Checking for duplicate's in database")
 
 	imgRef, _ := hashDB.Get(hash)
+	ogUid := string(imgRef)
 
 	if imgRef != nil {
-		log.Info().Str(()"[imgPost][" + string(imgRef) + "] duplicate checksum in hash database, checking if file still exists...")
+		log.Debug().Str("func",fn).Str("ogUid",ogUid).Msg("duplicate checksum in hash database, checking if file still exists...")
 		if imgDB.Has(imgRef) {
-			log.Info().Str(()"[imgPost][" + string(imgRef) + "] duplicate file found! returning URL for uid: " + string(imgRef))
-			postUpload(c,string(imgRef),"nil")					// they weren't the original uploader so they don't get a delete key
+			log.Debug().Str("func",fn).Str("ogUid",ogUid).Msg("duplicate file found! returning original URL")
+			postUpload(c,ogUid,"nil")					// they weren't the original uploader so they don't get a delete key
 			return
 		} else {
-			log.Info().Str(()"[imgPost][" + string(imgRef) + "] stale hash found, deleting entry...")
+			log.Debug().Str("func",fn).Str("ogUid",ogUid).Msg("stale hash found, deleting entry...")
 			hashDB.Delete(hash)
 		}
 	}
 
-	log.Info().Str(()"[imgPost] no duplicate images found, generating uid and delete key")
+	log.Info().Str("func",fn).Msg("no duplicate images found, generating uid and delete key")
 
-	uid := gouid.String(5)		// these should both be config directives eventually
-	key := gouid.String(16) 		// generate delete key
+	uid := gouid.String(uidSize)		// these should both be config directives eventually
+	key := gouid.String(keySize) 		// generate delete key
 
 
 	// lets make sure that we don't clash even though its highly unlikely
 	for uidRef, _ := imgDB.Get([]byte(uid)); uidRef != nil; {
-		log.Info().Str(()"[imgPost] uid already exists! generating new...")
+		log.Info().Str("func",fn).Msg(" uid already exists! generating new...")
 		uid = gouid.String(5)
 	}
 	for keyRef, _ := keyDB.Get([]byte(key)); keyRef != nil; {
-		log.Info().Str(()"[imgPost] delete key already exists! generating new...")
+		log.Info().Str("func",fn).Msg(" delete key already exists! generating new...")
 		key = gouid.String(16)
 	}
 
 
 	hashDB.Put([]byte(hash),[]byte(uid)) // save checksum to db to prevent dupes in the future
 
-	log.Info().Str(()"[imgPost][" + uid + "] saving file to database")
+	log.Debug().Str("func",fn).Str("uid",uid).Msg("saving file to database")
 
 	err = imgDB.Put([]byte(uid), []byte(Scrubbed))
 	if err != nil {
@@ -227,7 +233,7 @@ func imgPost(c *gin.Context) {
 		return
 	}
 
-	log.Info().Str(()"[imgPost][" + uid + "] saved to database successfully, returning JSON")
+	log.Debug().Str("func",fn).Str("uid",uid).Msg("saved to database successfully, sending to postUpload")
 
 	postUpload(c, uid, key)
 

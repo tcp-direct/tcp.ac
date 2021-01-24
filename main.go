@@ -24,7 +24,19 @@ func init() {
 
 	// now that we know where to put the log file, we can start output (replace logger)
 
-	lf, err := os.OpenFile(logDir+".log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	err  = os.MkdirAll(logDir, 0755)
+	if err != nil {
+		log.Fatal().Str("directory",logDir).Str("intent","logDir").Err(err)
+		return
+	}
+
+	err  = os.MkdirAll(dbDir, 0755)
+	if err != nil {
+		log.Fatal().Str("directory",dbDir).Str("intent","dbDir").Err(err)
+		return
+	}
+
+	lf, err := os.OpenFile(logDir+"tcpac.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
 	if err != nil {
 		fmt.Println("Error opening log file: " + err.Error())
 	}

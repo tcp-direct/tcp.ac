@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog"
 	"strconv"
 	"fmt"
+	"os"
 )
 
 ////////////// global declarations
@@ -23,13 +24,15 @@ var webPort    string
 var webIP      string
 var dbDir      string
 var logDir     string
+var uidSize    int
+var keySize    int
 // utilitarian globals
 var s	       string
-var f	       string
+var fn	       string
 var i	       int
 var err        error
-
-////////////////////////////////
+var f          *os.File
+/////////////////////////////////
 
 
 func configRead() {
@@ -72,4 +75,12 @@ func configRead() {
 	s = "files.logs"
 	logDir = viper.GetString(s)
 	log.Debug().Str(s,logDir).Msg("[config]")
+
+	s = "img.uidsize"
+	uidSize = viper.GetInt(s)
+	log.Debug().Int(s,uidSize).Msg("[config]")
+
+	s = "img.delkeysize"
+	keySize = viper.GetInt(s)
+	log.Debug().Int(s,keySize).Msg("[config]")
 }
