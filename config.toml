@@ -1,0 +1,13 @@
+title = "tcp.ac config"
+
+[global]
+debug   = true
+
+[http]
+baseurl = "http://127.0.0.1:8080/"
+bindip  = "127.0.0.1"
+port    = 8080
+
+[files]
+data    = "./data/"
+logs	= "./logs/"
