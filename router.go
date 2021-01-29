@@ -1,6 +1,9 @@
+
 package main
 
 import (
+	"github.com/gin-contrib/logger"
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,11 +18,23 @@ func urlPost(c *gin.Context) {
 func httpRouter() {
 	router := gin.New()
 
-	router.MaxMultipartMemory = 16 << 20
+	router.MaxMultipartMemory = 16 << 20 // crude POST limit (fix this)
+
+	// use gzip compression unless someone requests something with an explicit extension
+	router.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithExcludedPathsRegexs([]string{".*"})))
+
+	router.Use(logger.SetLogger()) // use our own logger
+
+	// static html and such
+	// workaround the issue where the router tries to handle /*
+	router.Static("/h", "./public")
+	router.StaticFile("/favicon.ico", "./public/favicon.ico")
+	router.GET("/", func(c *gin.Context) { c.Redirect(301, "h/") })
+
 
 	imgR := router.Group("/i")
 	{
-		imgR.POST("/put", imgPost)	// put looks nicer even though its actually POST
+		imgR.POST("/put", imgPost) // put looks nicer even though its actually POST
 		imgR.GET("/:uid", imgView)
 	}
 
@@ -38,5 +53,5 @@ func httpRouter() {
 		urlR.POST("/put", urlPost)
 	}
 
-	router.Run(webIP+":"+webPort)
+	router.Run(webIP + ":" + webPort)
 }

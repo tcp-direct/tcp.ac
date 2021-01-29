@@ -44,9 +44,6 @@ func init() {
 	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}
 	multi := zerolog.MultiLevelWriter(consoleWriter, lf)
 	log.Logger = zerolog.New(multi).With().Timestamp().Logger()
-
-	zerolog.SetGlobalLevel(zerolog.InfoLevel) // default is info and above
-
 	dbInit()
 }
 
