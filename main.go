@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog"
-	"fmt"
 	"os"
 )
 
@@ -11,13 +10,11 @@ func init() {
 	// initialize the logger before the config: that way we can output debug lines
         // pertaining to the parsing of the configuration init
 
-	fmt.Println("Initializing...")
-
 	//////////// init logging ////////////
 
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}) // before we read config, do Stderr pretty print (need logs location)
 
-	log.Info().Msg("Reading configuration file...")
+	log.Info().Msg("Initializing...")
 
 	// see config.go
 	configRead()
@@ -38,7 +35,7 @@ func init() {
 
 	lf, err := os.OpenFile(logDir+"tcpac.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
 	if err != nil {
-		fmt.Println("Error opening log file: " + err.Error())
+		log.Fatal().Str("logDir",logDir).Err(err).Msg("Error opening log file!")
 	}
 
 	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}

@@ -33,30 +33,30 @@ func configRead() {
 
 	s = "http.baseurl"
 	baseUrl = viper.GetString(s)
-	log.Debug().Str(s, baseUrl).Msg("[config]")
+	log.Debug().Str(s, baseUrl).Msg("configRead()")
 
 	s = "http.port"
 	i := viper.GetInt(s)
 	webPort = strconv.Itoa(i)                   // int looks cleaner in config
-	log.Debug().Str(s, webPort).Msg("[config]") //  but we reference it as a string later
+	log.Debug().Str(s, webPort).Msg("configRead()") //  but we reference it as a string later
 
 	s = "http.bindip"
 	webIP = viper.GetString(s)
-	log.Debug().Str(s, webIP).Msg("[config]")
+	log.Debug().Str(s, webIP).Msg("configRead()")
 
 	s = "files.data"
 	dbDir = viper.GetString(s)
-	log.Debug().Str(s, dbDir).Msg("[config]") //  where we're actually gonna store everything
+	log.Debug().Str(s, dbDir).Msg("configRead()") //  where we're actually gonna store everything
 
 	s = "files.logs"
 	logDir = viper.GetString(s)
-	log.Debug().Str(s, logDir).Msg("[config]")
+	log.Debug().Str(s, logDir).Msg("configRead()")
 
 	s = "img.uidsize"
 	uidSize = viper.GetInt(s)
-	log.Debug().Int(s, uidSize).Msg("[config]")
+	log.Debug().Int(s, uidSize).Msg("configRead()")
 
 	s = "img.delkeysize"
 	keySize = viper.GetInt(s)
-	log.Debug().Int(s, keySize).Msg("[config]")
+	log.Debug().Int(s, keySize).Msg("configRead()")
 }

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"github.com/prologic/bitcask"
+	"github.com/rs/zerolog/log"
 )
 
 func dbInit() {
@@ -10,18 +10,18 @@ func dbInit() {
 		bitcask.WithMaxValueSize(24 / 1024 / 1024),
 	}
 
+	hashDB, _ = bitcask.Open(dbDir+"hsh", opts...) // this will probably only be for images?
+	log.Debug().Msg("Initializing checksum database")
+
 	keyDB, _ = bitcask.Open(dbDir+"key", opts...) // delete keys (maybe for all objects?)
-	fmt.Println("Initializing key database")
+	log.Debug().Msg("Initializing key database")
 
 	imgDB, _ = bitcask.Open(dbDir+"img", opts...) // literal image files
-	fmt.Println("Initializing img database")
-
-	hashDB, _ = bitcask.Open(dbDir+"hsh", opts...) // this will probably only be for images?
-	fmt.Println("Initializing checksum database")
+	log.Debug().Msg("Initializing img database")
 
 	txtDB, _ = bitcask.Open(dbDir + "txt") // pastebin
-	fmt.Println("Initializing txt database")
+	log.Debug().Msg("Initializing txt database")
 
 	urlDB, _ = bitcask.Open(dbDir + "url") // url shortener entries
-	fmt.Println("Initializing url database")
+	log.Debug().Msg("Initializing url database")
 }

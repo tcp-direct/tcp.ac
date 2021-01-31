@@ -34,6 +34,7 @@ func httpRouter() {
 
 	imgR := router.Group("/i")
 	{
+		imgR.GET("/", func(c *gin.Context) { c.String(200,"") }) // javascript wants something here idk
 		imgR.POST("/put", imgPost) // put looks nicer even though its actually POST
 		imgR.GET("/:uid", imgView)
 	}
