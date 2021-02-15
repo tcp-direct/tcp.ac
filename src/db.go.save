@@ -1,0 +1,28 @@
+package main
+
+import (
+	"github.com/prologic/bitcask"
+	"github.com/rs/zerolog/log"
+)
+
+func dbInit() {
+	opts := []bitcask.Option{
+		bitcask.WithMaxValueSize(24 / 1024 / 1024),
+	}
+
+
+	hashDB, _ = bitcask.Open(dbDir + "hsh", opts...)
+	log.Info().Msg("Initializing checksum database")
+
+	keyDB, _ = bitcask.Open(dbDir + "key", opts...)
+	log.Info().Msg("Initializing key database")
+
+	imgDB, _ = bitcask.Open(dbDir + "img", opts...)
+	log.Info().Msg("Initializing img database")
+
+	txtDB, _ = bitcask.Open(dbDir + "txt")
+	log.Info().Msg("Initializing txt database")
+
+	urlDB, _ = bitcask.Open(dbDir + "url")
+	log.Info().Msg("Initializing url database")
+}
