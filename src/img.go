@@ -18,15 +18,25 @@ import (
 
 var fExt string
 
-func postUpload(c *gin.Context, id string, key string) {
-	imgurl := baseUrl + "i/" + string(id)
-	keyurl := "duplicate"
-	if key != "nil" {
-		keyurl = baseUrl + "d/i/" + string(key)
+type Post struct {
+	Type string
+	Uid  string
+	Key  string
+	Priv bool
+}
+
+func (p Post) Serve(c *gin.Context) {
+	url := baseUrl + p.Type + "/" + string(p.Uid)
+	priv := "no"
+	keyurl := ""
+	if p.Key != "" {
+		keyurl = baseUrl + "d/" + p.Type + "/" + p.Key
 	}
 
-	log.Info().Str("func", "imgPost").Str("id", id).Str("status", "201").Str("imgurl", imgurl).Str("keyurl", keyurl)
-	c.JSON(201, gin.H{"delkey": keyurl, "imgurl": imgurl})
+	if p.Priv == true { priv = "yes" }
+
+	log.Info().Str("type", p.Type).Str("uid", p.Uid).Str("key", p.Key).Str("private", priv).Msg("success")
+	c.JSON(201, gin.H{"delete": keyurl, "url": url, "private": priv })
 	return
 }
 
@@ -150,6 +160,8 @@ func imgView(c *gin.Context) {
 func imgPost(c *gin.Context) {
 	fn = "imgPost"
 	var Scrubbed []byte
+	var priv bool = false
+	var key string = ""
 
 	// check if incoming POST data is invalid
 	f, err := c.FormFile("upload")
@@ -209,7 +221,16 @@ func imgPost(c *gin.Context) {
 		log.Debug().Str("func", fn).Str("ogUid", ogUid).Msg("duplicate checksum in hash database, checking if file still exists...")
 		if imgDB.Has(imgRef) {
 			log.Debug().Str("func", fn).Str("ogUid", ogUid).Msg("duplicate file found! returning original URL")
-			postUpload(c, ogUid, "nil")
+
+			post := &Post{
+				Type: "i",
+				Uid: ogUid,
+				Key:  "",
+				Priv: false,
+			}
+
+			post.Serve(c)
+
 			return
 		} else {
 			log.Debug().Str("func", fn).Str("ogUid", ogUid).Msg("stale hash found, deleting entry...")
@@ -221,7 +242,7 @@ func imgPost(c *gin.Context) {
 
 	// generate new uid and delete key
 	uid := gouid.String(uidSize)
-	key := gouid.String(keySize)
+	key = gouid.String(keySize)
 
 	// lets make sure that we don't clash even though its highly unlikely
 	for uidRef, _ := imgDB.Get([]byte(uid)); uidRef != nil; {
@@ -253,8 +274,16 @@ func imgPost(c *gin.Context) {
 	}
 
 	// good to go, send them to the finisher function
-	log.Debug().Str("func", fn).Str("uid", uid).Msg("saved to database successfully, sending to postUpload")
-	postUpload(c, uid, key)
+	log.Debug().Str("func", fn).Str("uid", uid).Msg("saved to database successfully, sending to Serve")
+
+	post := &Post{
+		Type: "i",
+		Uid:  uid,
+		Key:  key,
+		Priv: priv,
+	}
+
+	post.Serve(c)
 
 }
 

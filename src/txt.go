@@ -11,15 +11,17 @@ import (
 )
 
 var hash []byte
+var uid string
+var key string
 
-func txtUpload(c *gin.Context, id string, key string) {
+func txtFin(c *gin.Context, id string, key string) {
 	txturl := baseUrl + "t/" + string(id)
 	keyurl := "duplicate"
 	if key != "nil" {
-		keyurl = baseUrl + "d/i/" + string(key)
+		keyurl = baseUrl + "d/t/" + string(key)
 	}
 
-	log.Info().Str("func", "txtPost").Str("id", id).Str("status", "201").Str("txturl", txturl).Str("keyurl", keyurl)
+	log.Info().Str("func", "txtPost").Str("id", id).Str("status", "201").Str("txturl", txturl).Str("keyurl", keyurl).Msg("success")
 	c.JSON(201, gin.H{"delkey": keyurl, "txturl": txturl})
 	return
 }
@@ -28,7 +30,7 @@ func txtDel(c *gin.Context) {
 	fn = "txtDel"
 
 	// make sure its the proper amount of characters and is alphanumeric
-	log.Debug().Str("func", fn).Msg("Request received!")
+	log.Info().Str("func", fn).Msg("delete request received")
 	rKey := c.Param("key")
 
 	if len(rKey) != keySize || !valid.IsAlphanumeric(rKey) {
@@ -37,7 +39,7 @@ func txtDel(c *gin.Context) {
 		return
 	}
 
-	// first we see if the key even exists, and if it does, is it a txt key (vs img or url)
+	// first we see if the key even exists, and if it does, is it a txt key (vs txt or url)
 	targettxt, _ := keyDB.Get([]byte(rKey))
 	if targettxt == nil || !strings.Contains(string(targettxt), "t.") {
 		log.Error().Err(err).Str("func", fn).Str("rkey", rKey).Msg("no txt delete entry found with provided key")
@@ -92,7 +94,7 @@ func txtView(c *gin.Context) {
 	fn = "txtView"
 	// the user can access their text with or without a file extension in URI
 	// however it must be a valid extension (more checks further down)
-	log.Debug().Str("func", fn).Msg("request received")
+	log.Info().Str("func", fn).Msg("request received")
 	sUid := strings.Split(c.Param("uid"), ".")
 	rUid := sUid[0]
 	if len(sUid) > 1 {
@@ -130,22 +132,43 @@ func txtView(c *gin.Context) {
 func txtPost(c *gin.Context) {
 	fn = "txtPost"
 
-	var Scrubbed []byte
+	t := c.PostForm("txt")
+	priv := c.PostForm("priv")
 
-	t := c.PostForm("paste")
+
+	tbyte := []byte(t)
+
+	if err != nil {
+		log.Error().Err(err).Str("fn",fn).Msg("Oh?")
+		errThrow(c, 500, "500", "500")
+		return
+	}
+
+	if len(t) == 0 {
+		log.Warn().Str("fn",fn).Msg("received an empty request")
+		errThrow(c, 400, "400", "400")
+		return
+	}
+
+	if c.ContentType() != "text/plain" {
+		log.Warn().Str("fn",fn).Str("ContentType", c.ContentType()).Msg("received a non-text content-type")
+		errThrow(c, 400, "400", "400")
+		return
+	}
+
+
 	// an optional switch for a privnote style burn after read
-	priv := c.GetBool("private")
+	// priv := c.GetBool("private")
 
 	if err != nil {
 		// incoming POST data is invalid
 		errThrow(c, http.StatusBadRequest, err.Error(), "400") // 400 bad request
 	}
 
-	log.Debug().Str("func", fn).Msg("[+] New paste")
+	log.Debug().Str("func", fn).Msg("New paste")
 
-	// lets check for dupes but only if its not a private note
-	if !priv {
-		tbyte := []byte(t)
+	if priv == "on" {
+		// check for dupes
 		log.Debug().Str("func", fn).Msg("calculating blake2b checksum")
 		Hashr, _ := blake2b.New(64, nil)
 		Hashr.Write(tbyte)
@@ -159,50 +182,51 @@ func txtPost(c *gin.Context) {
 			if txtDB.Has(txtRef) {
 				log.Debug().Str("func", fn).Str("ogUid", ogUid).Msg("duplicate file found! returning original URL")
 				// they weren't the original uploader so they don't get a delete key
-				txtUpload(c, ogUid, "nil")
+				txtFin(c, ogUid, "nil")
 				return
 			} else {
 				log.Debug().Str("func", fn).Str("ogUid", ogUid).Msg("stale hash found, deleting entry...")
 				hashDB.Delete(hash)
 			}
 		}
-		log.Info().Str("func", fn).Msg("no duplicate images found, generating uid and delete key")
-	} else {
-		log.Info().Str("func", fn).Msg("private paste - skipped checksum check")
+		log.Info().Str("func", fn).Msg("no duplicate txts found, generating uid and delete key")
+
+		// generate identifier and delete key based on configured sizes
+		uid := gouid.String(uidSize)
+		key := gouid.String(keySize)
+
+		// lets make sure that we don't clash even though its highly unlikely
+		for uidRef, _ := txtDB.Get([]byte(uid)); uidRef != nil; {
+			log.Info().Str("func", fn).Msg("uid already exists! generating another...")
+			uid = gouid.String(uidSize)
+		}
+		for keyRef, _ := keyDB.Get([]byte(key)); keyRef != nil; {
+			log.Info().Str("func", fn).Msg(" delete key already exists! generating another...")
+			key = gouid.String(keySize)
+		}
+
+		// save checksum to db to prevent dupes in the future
+		hashDB.Put([]byte(hash), []byte(uid))
+
+		log.Debug().Str("func", fn).Str("uid", uid).Msg("saving file to database")
+
+		err = txtDB.Put([]byte(uid), []byte(tbyte))
+		if err != nil {
+			errThrow(c, 500, err.Error(), "upload failed")
+			return
+		}
+
+		// add delete key to database with txt prefix
+		err = keyDB.Put([]byte(key), []byte("t."+uid))
+		if err != nil {
+			errThrow(c, http.StatusInternalServerError, err.Error(), "internal error")
+			return
+		}
 	}
 
-	// generate identifier and delete key based on configured sizes
-	uid := gouid.String(uidSize)
-	key := gouid.String(keySize)
 
-	// lets make sure that we don't clash even though its highly unlikely
-	for uidRef, _ := txtDB.Get([]byte(uid)); uidRef != nil; {
-		log.Info().Str("func", fn).Msg("uid already exists! generating another...")
-		uid = gouid.String(uidSize)
-	}
-	for keyRef, _ := keyDB.Get([]byte(key)); keyRef != nil; {
-		log.Info().Str("func", fn).Msg(" delete key already exists! generating another...")
-		key = gouid.String(keySize)
-	}
+	log.Debug().Str("func", fn).Str("uid", uid).Msg("saved to database successfully, sending to txtFin")
 
-	hashDB.Put([]byte(hash), []byte(uid)) // save checksum to db to prevent dupes in the future
-
-	log.Debug().Str("func", fn).Str("uid", uid).Msg("saving file to database")
-
-	err = txtDB.Put([]byte(uid), []byte(Scrubbed))
-	if err != nil {
-		errThrow(c, 500, err.Error(), "upload failed")
-		return
-	}
-
-	err = keyDB.Put([]byte(key), []byte("i."+uid)) // add delete key to database with image prefix
-	if err != nil {
-		errThrow(c, http.StatusInternalServerError, err.Error(), "internal error")
-		return
-	}
-
-	log.Debug().Str("func", fn).Str("uid", uid).Msg("saved to database successfully, sending to postUpload")
-
-	postUpload(c, uid, key)
+	txtFin(c, uid, key)
 
 }
