@@ -36,7 +36,7 @@ func (p Post) Serve(c *gin.Context) {
 	if p.Priv == true { priv = "yes" }
 
 	log.Info().Str("type", p.Type).Str("uid", p.Uid).Str("key", p.Key).Str("private", priv).Msg("success")
-	c.JSON(201, gin.H{"delete": keyurl, "url": url, "private": priv })
+	c.JSON(201, gin.H{"Imgurl": url, "ToDelete": keyurl})
 	return
 }
 

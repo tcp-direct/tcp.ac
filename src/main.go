@@ -2,26 +2,22 @@ package main
 
 import (
 	"github.com/rs/zerolog/log"
+	"github.com/muesli/termenv"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
-	"encoding/base64"
 	"fmt"
 	"os"
 )
 
-var Banner string = "ICB8fCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgfHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAonJ3x8JycgIC58JycsICd8fCcnfCwgICAgICcnJ3wuICAufCcnLCAKICB8fCAgICB8fCAgICAgfHwgIHx8ICAgIC58Jyd8fCAgfHwgICAgCiAgYHwuLicgYHwuLicgIHx8Li58JyAuLiBgfC4ufHwuIGB8Li4nIAogICAgICAgICAgICAgICB8fCAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAufHwgICAgICAgICAgICAgICAgICAgICAgCg=="
-
-func b64d(str string) string {
-        data, err := base64.StdEncoding.DecodeString(str)
-        if err != nil {
-                return err.Error()
-        }
-        return string(data)
-}
+var Banner string = "ICAsZCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgODggICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIApNTTg4TU1NICxhZFBQWWJhLCA4YixkUFBZYmEsICAgICAgLGFkUFBZWWJhLCAgLGFkUFBZYmEsICAKICA4OCAgIGE4IiAgICAgIiIgODhQJyAgICAiOGEgICAgICIiICAgICBgWTggYTgiICAgICAiIiAgCiAgODggICA4YiAgICAgICAgIDg4ICAgICAgIGQ4ICAgICAsYWRQUFBQUDg4IDhiICAgICAgICAgIAogIDg4LCAgIjhhLCAgICxhYSA4OGIsICAgLGE4IiA4ODggODgsICAgICw4OCAiOGEsICAgLGFhICAKICAiWTg4OCBgIlliYmQ4IicgODhgWWJiZFAiJyAgODg4IGAiOGJiZFAiWTggIGAiWWJiZDgiJyAgCiAgICAgICAgICAgICAgICAgIDg4ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICA4OCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAK"
 
 func init() {
-	fmt.Println()
-	fmt.Println(b64d(Banner))
+
+	out := termenv.String(b64d(Banner))
+	p := termenv.ColorProfile()
+	out = out.Foreground(p.Color("#948DB8"))
+
+	fmt.Println(out)
 
 	// initialize the logger before the config: that way we can output debug lines
         // pertaining to the parsing of the configuration init
