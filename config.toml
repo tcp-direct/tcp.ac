@@ -1,7 +1,7 @@
 title = "tcp.ac config"
 
 [global]
-debug      = true
+debug      = false
 
 [http]
 baseurl    = "http://127.0.0.1:8080/"
