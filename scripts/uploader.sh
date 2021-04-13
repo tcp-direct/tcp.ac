@@ -74,7 +74,6 @@ function stop_spinner {
 }
 
 ################################################
-echo ""
 start_spinner "uploading $1..."
 OUT=$(curl -s -F "upload=@$1" -u "tcpac:kuevEacshmej5" https://tcp.ac/i/put)
 if ! [[ "$OUT" == *"Imgurl"* ]]; then
@@ -86,7 +85,7 @@ if ! [[ "$OUT" == *"Imgurl"* ]]; then
 else
 	CLEAN=$(echo $OUT | sed 's|\\||g' | sed 's|"{"|{"|g' | sed 's|"}"|"}|g') 
 	echo $CLEAN | jq | tee $1.DELETEKEY
-	IMGURL=$(echo $CLEAN | awk -F ':' '{print $2 $3}' | awk -F ',' '{print $1}' | awk -F '}' '{print $1}' | sed 's|"||g' | sed 's|"||g' | sed 's|https|https:|g')
+	IMGURL=$(echo $CLEAN | awk -F ':' '{print $2 $3}' | awk -F ',' '{print $1}' | awk -F '}' '{print $1}' | sed -e 's|"||g' -e 's|"||g' -e 's|https|https:|g' -e 's|http\/\/|http:\/\/|g')
 	echo -n $IMGURL | xclip -sel clip
 	notify-send -i image-x-generic 'tcp.ac upload success' 'link copied to clipboard, delete key saved' -t 5000
 fi
