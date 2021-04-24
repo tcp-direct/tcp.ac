@@ -41,7 +41,7 @@ func configRead() {
 	// bind port
 	s = "http.port"
 	i := viper.GetInt(s)
-	webPort = strconv.Itoa(i)                   // int looks cleaner in config
+	webPort = strconv.Itoa(i) // int looks cleaner in config
 
 	// bind IP
 	s = "http.bindip"
@@ -67,6 +67,5 @@ func configRead() {
 	log.Debug().Str("logDir", logDir).Str("dbDir", dbDir).Msg("Filesystem")
 	log.Debug().Int("keySize", keySize).Int("uidSize", uidSize).Msg("UUIDs")
 
-
-//
+	//
 }

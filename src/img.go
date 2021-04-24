@@ -33,7 +33,9 @@ func (p Post) Serve(c *gin.Context) {
 		keyurl = baseUrl + "d/" + p.Type + "/" + p.Key
 	}
 
-	if p.Priv == true { priv = "yes" }
+	if p.Priv == true {
+		priv = "yes"
+	}
 
 	log.Info().Str("type", p.Type).Str("uid", p.Uid).Str("key", p.Key).Str("private", priv).Msg("success")
 	c.JSON(201, gin.H{"Imgurl": url, "ToDelete": keyurl})
@@ -112,7 +114,7 @@ func imgView(c *gin.Context) {
 	}
 
 	// if it doesn't match the key size or it isn't alphanumeric - throw it out
-	if (!valid.IsAlphanumeric(rUid) || len(rUid) != uidSize) {
+	if !valid.IsAlphanumeric(rUid) || len(rUid) != uidSize {
 		log.Error().Str("func", fn).Msg("request discarded as invalid") // these limits should be variables eventually
 		errThrow(c, 400, "400", "400")
 		return
@@ -224,7 +226,7 @@ func imgPost(c *gin.Context) {
 
 			post := &Post{
 				Type: "i",
-				Uid: ogUid,
+				Uid:  ogUid,
 				Key:  "",
 				Priv: false,
 			}
@@ -241,17 +243,17 @@ func imgPost(c *gin.Context) {
 	log.Info().Str("func", fn).Msg("no duplicate images found, generating uid and delete key")
 
 	// generate new uid and delete key
-	uid := gouid.String(uidSize)
-	key = gouid.String(keySize)
+	uid := gouid.String(uidSize, gouid.MixedCaseAlphaNum)
+	key = gouid.String(keySize, gouid.MixedCaseAlphaNum)
 
 	// lets make sure that we don't clash even though its highly unlikely
 	for uidRef, _ := imgDB.Get([]byte(uid)); uidRef != nil; {
 		log.Info().Str("func", fn).Msg(" uid already exists! generating new...")
-		uid = gouid.String(uidSize)
+		uid = gouid.String(uidSize, gouid.MixedCaseAlphaNum)
 	}
 	for keyRef, _ := keyDB.Get([]byte(key)); keyRef != nil; {
 		log.Info().Str("func", fn).Msg(" delete key already exists! generating new...")
-		key = gouid.String(keySize)
+		key = gouid.String(keySize, gouid.MixedCaseAlphaNum)
 	}
 
 	// save checksum to db to prevent dupes in the future

@@ -1,15 +1,15 @@
 package main
 
 import (
-	"github.com/rs/zerolog/log"
-	"github.com/muesli/termenv"
-	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/muesli/termenv"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"os"
 )
 
-var Banner string = "ICAsZCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgODggICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIApNTTg4TU1NICxhZFBQWWJhLCA4YixkUFBZYmEsICAgICAgLGFkUFBZWWJhLCAgLGFkUFBZYmEsICAKICA4OCAgIGE4IiAgICAgIiIgODhQJyAgICAiOGEgICAgICIiICAgICBgWTggYTgiICAgICAiIiAgCiAgODggICA4YiAgICAgICAgIDg4ICAgICAgIGQ4ICAgICAsYWRQUFBQUDg4IDhiICAgICAgICAgIAogIDg4LCAgIjhhLCAgICxhYSA4OGIsICAgLGE4IiA4ODggODgsICAgICw4OCAiOGEsICAgLGFhICAKICAiWTg4OCBgIlliYmQ4IicgODhgWWJiZFAiJyAgODg4IGAiOGJiZFAiWTggIGAiWWJiZDgiJyAgCiAgICAgICAgICAgICAgICAgIDg4ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICA4OCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAK"
+var Banner string = "CiAgLGQgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogIDg4ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKTU04OE1NTSAsYWRQUFliYSwgOGIsZFBQWWJhLCAgICAgICxhZFBQWVliYSwgICxhZFBQWWJhLCAgCiAgODggICBhOCIgICAgICIiIDg4UCcgICAgIjhhICAgICAiIiAgICAgYFk4IGE4IiAgICAgIiIgIAogIDg4ICAgOGIgICAgICAgICA4OCAgICAgICBkOCAgICAgLGFkUFBQUFA4OCA4YiAgICAgICAgICAKICA4OCwgICI4YSwgICAsYWEgODhiLCAgICxhOCIgODg4IDg4LCAgICAsODggIjhhLCAgICxhYSAgCiAgIlk4ODggYCJZYmJkOCInIDg4YFliYmRQIicgIDg4OCBgIjhiYmRQIlk4ICBgIlliYmQ4IicgIAogICAgICAgICAgICAgICAgICA4OCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgODggICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCg=="
 
 func init() {
 
@@ -20,7 +20,7 @@ func init() {
 	fmt.Println(out)
 
 	// initialize the logger before the config: that way we can output debug lines
-        // pertaining to the parsing of the configuration init
+	// pertaining to the parsing of the configuration init
 
 	//////////// init logging ////////////
 
@@ -38,21 +38,21 @@ func init() {
 
 	// now that we know where to put the log file, we can start output (replace logger)
 
-	err  = os.MkdirAll(logDir, 0755)
+	err = os.MkdirAll(logDir, 0755)
 	if err != nil {
-		log.Fatal().Str("directory",logDir).Str("intent","logDir").Err(err).Msg("failed to open directory")
+		log.Fatal().Str("directory", logDir).Str("intent", "logDir").Err(err).Msg("failed to open directory")
 		return
 	}
 
-	err  = os.MkdirAll(dbDir, 0755)
+	err = os.MkdirAll(dbDir, 0755)
 	if err != nil {
-		log.Fatal().Str("directory",dbDir).Str("intent","dbDir").Err(err).Msg("failed to open directory")
+		log.Fatal().Str("directory", dbDir).Str("intent", "dbDir").Err(err).Msg("failed to open directory")
 		return
 	}
 
-	lf, err := os.OpenFile(logDir+"tcpac.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	lf, err := os.OpenFile(logDir+"tcpac.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
-		log.Fatal().Str("logDir",logDir).Err(err).Msg("Error opening log file!")
+		log.Fatal().Str("logDir", logDir).Err(err).Msg("Error opening log file!")
 	}
 
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})

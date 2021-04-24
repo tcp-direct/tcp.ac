@@ -1,17 +1,17 @@
 title = "tcp.ac config"
 
 [global]
-debug      = false
+debug      = true
 
 [http]
-baseurl    = "http://127.0.0.1/"
-bindip     = "127.0.0.1"
-port       = 8080
+baseurl    = "http://192.168.69.1/"
+bindip     = "192.168.69.1"
+port       = 80
 
 [img]
-uidsize    = 6
-delkeysize = 24
+uidsize    = 4
+delkeysize = 12
 
 [files]
-data       = "../data/"
-logs	   = "../logs/"
+data       = "/etc/tcpac/data/"
+logs	   = "/etc/tcpac/logs/"
