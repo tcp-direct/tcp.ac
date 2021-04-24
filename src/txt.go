@@ -83,11 +83,10 @@ func txtDel(c *gin.Context) {
 	}
 	c.JSON(200, "DELETE_SUCCESS")
 
-
 	// it would be insane to try and delete the hash here
 	// if someone is uploading this text again after del
-        // and the file corresponding to the hash no longer exists
- 	// we will delete the hash entry then and re-add then
+	// and the file corresponding to the hash no longer exists
+	// we will delete the hash entry then and re-add then
 }
 
 func txtView(c *gin.Context) {
@@ -135,27 +134,25 @@ func txtPost(c *gin.Context) {
 	t := c.PostForm("txt")
 	priv := c.PostForm("priv")
 
-
 	tbyte := []byte(t)
 
 	if err != nil {
-		log.Error().Err(err).Str("fn",fn).Msg("Oh?")
+		log.Error().Err(err).Str("fn", fn).Msg("Oh?")
 		errThrow(c, 500, "500", "500")
 		return
 	}
 
 	if len(t) == 0 {
-		log.Warn().Str("fn",fn).Msg("received an empty request")
+		log.Warn().Str("fn", fn).Msg("received an empty request")
 		errThrow(c, 400, "400", "400")
 		return
 	}
 
 	if c.ContentType() != "text/plain" {
-		log.Warn().Str("fn",fn).Str("ContentType", c.ContentType()).Msg("received a non-text content-type")
+		log.Warn().Str("fn", fn).Str("ContentType", c.ContentType()).Msg("received a non-text content-type")
 		errThrow(c, 400, "400", "400")
 		return
 	}
-
 
 	// an optional switch for a privnote style burn after read
 	// priv := c.GetBool("private")
@@ -192,17 +189,17 @@ func txtPost(c *gin.Context) {
 		log.Info().Str("func", fn).Msg("no duplicate txts found, generating uid and delete key")
 
 		// generate identifier and delete key based on configured sizes
-		uid := gouid.String(uidSize)
-		key := gouid.String(keySize)
+		uid := gouid.String(uidSize, gouid.MixedCaseAlphaNum)
+		key := gouid.String(keySize, gouid.MixedCaseAlphaNum)
 
 		// lets make sure that we don't clash even though its highly unlikely
 		for uidRef, _ := txtDB.Get([]byte(uid)); uidRef != nil; {
 			log.Info().Str("func", fn).Msg("uid already exists! generating another...")
-			uid = gouid.String(uidSize)
+			uid = gouid.String(uidSize, gouid.MixedCaseAlphaNum)
 		}
 		for keyRef, _ := keyDB.Get([]byte(key)); keyRef != nil; {
 			log.Info().Str("func", fn).Msg(" delete key already exists! generating another...")
-			key = gouid.String(keySize)
+			key = gouid.String(keySize, gouid.MixedCaseAlphaNum)
 		}
 
 		// save checksum to db to prevent dupes in the future
@@ -223,7 +220,6 @@ func txtPost(c *gin.Context) {
 			return
 		}
 	}
-
 
 	log.Debug().Str("func", fn).Str("uid", uid).Msg("saved to database successfully, sending to txtFin")
 
