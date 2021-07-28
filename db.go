@@ -25,3 +25,10 @@ func dbInit() {
 	urlDB, _ = bitcask.Open(dbDir + "url") // url shortener entries
 	log.Info().Msg("Initializing url database")
 }
+
+func dbSync() {
+	hashDB.Sync()
+	keyDB.Sync()
+	imgDB.Sync()
+	urlDB.Sync()
+}

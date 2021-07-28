@@ -102,7 +102,7 @@ func termPost(b []byte) {
 		key = gouid.String(keySize, gouid.MixedCaseAlphaNum)
 	}
 
-	hashDB.Put([]byte(hash), []byte(uid))
+	hashDB.Put(hash, []byte(uid))
 
 	uid = gouid.String(uidSize, gouid.MixedCaseAlphaNum)
 	key = gouid.String(keySize, gouid.MixedCaseAlphaNum)
