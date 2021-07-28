@@ -62,6 +62,7 @@ func init() {
 }
 
 func main() {
+	go serveTermbin()
 	// see router.go
 	httpRouter()
 }

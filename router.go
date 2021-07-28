@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"github.com/gin-contrib/gzip"
-	"github.com/gin-contrib/logger"
+//	"github.com/gin-contrib/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )
@@ -41,7 +41,7 @@ func httpRouter() {
 
 	router := gin.New()
 
-	router.Use(logger.SetLogger())
+	//router.Use(logger.SetLogger())
 
 	router.MaxMultipartMemory = 16 << 20 // crude POST limit (fix this)
 
@@ -57,26 +57,33 @@ func httpRouter() {
 
 	imgR := router.Group("/i")
 	{
-		imgR.GET("/", func(c *gin.Context) { c.String(200, "") })
+		imgR.GET("/", placeHolder)
 		// put looks nicer even though its actually POST
 		imgR.POST("/put", imgPost)
 		imgR.GET("/:uid", imgView)
 	}
 
+	txtR := router.Group("/t")
+	{
+		txtR.GET("/", placeHolder)
+		txtR.GET("/:uid", txtView)
+	}
+
 	delR := router.Group("/d")
 	{
 		delR.GET("/i/:key", imgDel)
+		delR.GET("/t/:key", txtDel)
 	}
 
-//	txtR := router.Group("/t")
-//	{
-//		txtR.POST("/put", txtPost)
-//	}
+	//	txtR := router.Group("/t")
+	//	{
+	//		txtR.POST("/put", txtPost)
+	//	}
 
-//	urlR := router.Group("/u")
-//	{
-//		urlR.POST("/put", urlPost)
-//	}
+	//	urlR := router.Group("/u")
+	//	{
+	//		urlR.POST("/put", urlPost)
+	//	}
 
 	log.Info().Str("webIP", webIP).Str("webPort", webPort).Msg("done; tcp.ac is live.")
 	router.Run(webIP + ":" + webPort)

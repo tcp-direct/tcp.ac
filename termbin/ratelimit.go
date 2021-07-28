@@ -10,11 +10,11 @@ var (
 	// Users contains all remote addresses currently being ratelimited
 	Users *cache.Cache
 	// Rate is the amount of seconds between each post from an IP address
-	Rate time.Duration = 30
+	Rate time.Duration = 8
 )
 
 func init() {
-	Users = cache.New(Rate*time.Second, 30*time.Second)
+	Users = cache.New(Rate*time.Second, 10*time.Second)
 }
 
 func isThrottled(addr string) bool {

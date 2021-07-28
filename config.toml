@@ -1,16 +1,19 @@
 title = "tcp.ac config"
 
 [global]
-debug      = false
+debug      = true
+uidsize    = 5
+delkeysize = 12
 
 [http]
-baseurl    = "http://192.168.69.1/"
-bindip     = "192.168.69.1"
-port       = 80
+baseurl    = "http://127.0.0.1:8080/"
+basehost   = "127.0.0.1"
+bindip     = "127.0.0.1"
+port       = 8080
 
-[img]
-uidsize    = 4
-delkeysize = 12
+[txt]
+# string: port to listen on for termbin clone
+port       = "9999"
 
 [files]
 data       = "/etc/tcpac/data/"

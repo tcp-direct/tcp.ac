@@ -10,6 +10,8 @@ import (
 var (
 	// Msg is a channel for status information during concurrent server operations
 	Msg chan Message
+	// Reply is a channel to receive messages to send our client upon completion
+	Reply chan Message
 	// Timeout is the read timeout for incoming data in seconds
 	Timeout int = 4
 	// Max size for incoming data (default: 3 << 30 or 3 MiB)
@@ -31,6 +33,7 @@ type Message struct {
 
 func init() {
 	Msg = make(chan Message)
+	Reply = make(chan Message)
 }
 
 func termStatus(m Message) {
@@ -113,6 +116,13 @@ func serve(c net.Conn) {
 	}
 
 	termStatus(Message{Type: "FINAL", RAddr: c.RemoteAddr().String(), Size: len(final), Bytes: final, Content: "SUCCESS"})
+	url := <- Reply
+	switch url.Type {
+	case "URL":
+		c.Write([]byte(url.Content))
+	case "ERROR":
+		c.Write([]byte("ERROR: " + url.Content))
+	}
 	c.Close()
 }
 

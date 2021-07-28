@@ -3,226 +3,252 @@ package main
 import (
 	valid "github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
+	cache "github.com/patrickmn/go-cache"
 	"github.com/rs/zerolog/log"
 	"github.com/twharmon/gouid"
 	"golang.org/x/crypto/blake2b"
-	"net/http"
 	"strings"
+	"tcp.ac/termbin"
+	"time"
 )
 
-var hash []byte
-var uid string
-var key string
+var (
+	Users *cache.Cache
+)
 
-func txtFin(c *gin.Context, id string, key string) {
-	txturl := baseUrl + "t/" + string(id)
-	keyurl := "duplicate"
-	if key != "nil" {
-		keyurl = baseUrl + "d/t/" + string(key)
-	}
-
-	log.Info().Str("func", "txtPost").Str("id", id).Str("status", "201").Str("txturl", txturl).Str("keyurl", keyurl).Msg("success")
-	c.JSON(201, gin.H{"delkey": keyurl, "txturl": txturl})
-	return
+func init() {
+	termbin.UseChannel = true
+	Users = cache.New(termbin.Rate*time.Second, 30*time.Second)
 }
 
-func txtDel(c *gin.Context) {
-	fn = "txtDel"
+func txtThrottled(addr string) bool {
+	if _, ok := Users.Get(addr); !ok {
+		Users.Set(addr, 1, 0)
+		return false
+	} else {
+		return true
+	}
+}
 
-	// make sure its the proper amount of characters and is alphanumeric
-	log.Info().Str("func", fn).Msg("delete request received")
-	rKey := c.Param("key")
+func incoming() {
+	var msg termbin.Message
 
-	if len(rKey) != keySize || !valid.IsAlphanumeric(rKey) {
-		log.Error().Err(err).Str("func", fn).Msg("delete request failed sanity check!")
-		errThrow(c, 400, "400", "400")
-		return
+	select {
+	case msg = <-termbin.Msg:
+		switch msg.Type {
+		case "ERROR":
+			log.Error().
+				Str("RemoteAddr", msg.RAddr).
+				Int("Size", msg.Size).
+				Msg(msg.Content)
+		case "INCOMING_DATA":
+			log.Debug().
+				Str("RemoteAddr", msg.RAddr).
+				Int("Size", msg.Size).
+				Msg("termbin_data")
+		case "FINISH":
+			log.Debug().
+				Str("RemoteAddr", msg.RAddr).
+				Int("Size", msg.Size).
+				Msg(msg.Content)
+
+		case "DEBUG":
+			log.Debug().
+				Str("RemoteAddr", msg.RAddr).
+				Int("Size", msg.Size).
+				Msg(msg.Content)
+
+		case "FINAL":
+			log.Info().
+				Str("RemoteAddr", msg.RAddr).
+				Int("Size", msg.Size).
+				Msg(msg.Content)
+
+			termPost(msg.Bytes)
+		}
+	}
+}
+
+func termPost(b []byte) {
+	slog := log.With().Str("caller", "termPost").Logger()
+	Hashr, _ := blake2b.New(64, nil)
+	Hashr.Write(b)
+	hash := Hashr.Sum(nil)
+	if ogTxt, _ := hashDB.Get(hash); ogTxt != nil {
+		if txtDB.Has(ogTxt) {
+			slog.Debug().Str("ogUid", string(ogTxt)).Msg("duplicate file found! returning original URL")
+			post := &Post{
+				Type: "t",
+				Uid:  string(ogTxt),
+				Key:  "",
+				Priv: false,
+			}
+			termbin.Reply <- termbin.Message{Type: "URL", Content: post.URLString()}
+			return
+		}
 	}
 
-	// first we see if the key even exists, and if it does, is it a txt key (vs txt or url)
-	targettxt, _ := keyDB.Get([]byte(rKey))
-	if targettxt == nil || !strings.Contains(string(targettxt), "t.") {
-		log.Error().Err(err).Str("func", fn).Str("rkey", rKey).Msg("no txt delete entry found with provided key")
-		errThrow(c, 400, "400", "400")
-		return
+	// generate new uid and delete key
+	uid := gouid.String(uidSize, gouid.MixedCaseAlphaNum)
+	key := gouid.String(keySize, gouid.MixedCaseAlphaNum)
+
+	// lets make sure that we don't clash even though its highly unlikely
+	for uidRef, _ := txtDB.Get([]byte(uid)); uidRef != nil; {
+		slog.Info().Msg(" uid already exists! generating new...")
+		uid = gouid.String(uidSize, gouid.MixedCaseAlphaNum)
+	}
+	for keyRef, _ := keyDB.Get([]byte(key)); keyRef != nil; {
+		slog.Info().Msg(" delete key already exists! generating new...")
+		key = gouid.String(keySize, gouid.MixedCaseAlphaNum)
 	}
 
-	// seperate the key from the indicator to get the actual txt delete key
-	finalTarget := strings.Split(string(targettxt), ".")
+	hashDB.Put([]byte(hash), []byte(uid))
 
-	// somehow we have a key that doesn't correspond with with an actual entry
-	if !txtDB.Has([]byte(finalTarget[1])) {
-		log.Error().Err(err).Str("func", fn).Str("rkey", rKey).Msg("corresponding text entry not found in database!")
-		errThrow(c, 500, "500", "500")
-		return
+	uid = gouid.String(uidSize, gouid.MixedCaseAlphaNum)
+	key = gouid.String(keySize, gouid.MixedCaseAlphaNum)
+
+	for uidRef, _ := txtDB.Get([]byte(uid)); uidRef != nil; {
+		slog.Info().Msg(" uid already exists! generating new...")
+		uid = gouid.String(uidSize, gouid.MixedCaseAlphaNum)
+	}
+	for keyRef, _ := keyDB.Get([]byte(key)); keyRef != nil; {
+		slog.Info().Msg(" delete key already exists! generating new...")
+		key = gouid.String(keySize, gouid.MixedCaseAlphaNum)
 	}
 
-	// if we passed all those checks, delete the txt entry from the database
-	err := txtDB.Delete([]byte(finalTarget[1]))
+	hashDB.Put([]byte(hash), []byte(uid))
 
-	// failed to delete it? shouldn't happen
+	err = txtDB.Put([]byte(uid), b)
 	if err != nil {
-		log.Error().Err(err).Str("func", fn).Str("rkey", finalTarget[1]).Msg("delete failed!")
-		errThrow(c, 500, "500", "500")
+		slog.Error().Msg("failed to save text!")
+		termbin.Reply <- termbin.Message{Type: "ERROR", Content: "internal server error"}
 		return
 	}
-
-	// make sure its actually gone
-	if txtDB.Has([]byte(finalTarget[1])) {
-		log.Error().Err(err).Str("func", fn).Str("rkey", finalTarget[1]).Msg("delete failed!?")
-		errThrow(c, 500, "500", "500")
-		return
-	}
-
-	// remove the delete key entry but not the hash (see below)
-	log.Info().Str("func", fn).Str("rkey", finalTarget[1]).Msg("text deleted successfully")
-	log.Debug().Str("func", fn).Str("rkey", finalTarget[1]).Msg("Removing delete key entry")
-	err = keyDB.Delete([]byte(rKey))
+	err = keyDB.Put([]byte(key), []byte("t."+uid))
 	if err != nil {
-		log.Error().Err(err).Str("func", fn).Str("rkey", finalTarget[1]).Msg("Couldn't delete key")
+		slog.Error().Msg("failed to save delete key!")
+		termbin.Reply <- termbin.Message{Type: "ERROR", Content: "internal server error"}
+		return
 	}
-	c.JSON(200, "DELETE_SUCCESS")
 
-	// it would be insane to try and delete the hash here
-	// if someone is uploading this text again after del
-	// and the file corresponding to the hash no longer exists
-	// we will delete the hash entry then and re-add then
+	slog.Debug().Str("uid", uid).Msg("saved to database successfully, sending to Serve")
+
+	post := &Post{
+		Type: "t",
+		Uid:  uid,
+		Key:  key,
+		Priv: false,
+	}
+
+	termbin.Reply <- termbin.Message{Type: "URL", Content: post.URLString()}
 }
 
 func txtView(c *gin.Context) {
-	fn = "txtView"
-	// the user can access their text with or without a file extension in URI
-	// however it must be a valid extension (more checks further down)
-	log.Info().Str("func", fn).Msg("request received")
+	slog := log.With().Str("caller", "txtView").Logger()
+
+	raddr, _ := c.RemoteIP()
+	if txtThrottled(raddr.String()) {
+		errThrow(c, 429, "ratelimited", "too many requests")
+		return
+	}
+
+	// the user can access their image with or without a file extension in URI
+	slog.Debug().Msg("request received") //  however it must be a valid extension (more checks further down)
+
 	sUid := strings.Split(c.Param("uid"), ".")
 	rUid := sUid[0]
+	fExt = ""
+
 	if len(sUid) > 1 {
 		fExt = strings.ToLower(sUid[1])
-		log.Debug().Str("func", fn).Str("ext", fExt).Msg("detected file extension")
 		if fExt != "txt" {
-			log.Error().Err(err).Str("func", fn).Msg("Bad file extension!")
+			slog.Error().Msg("bad file extension")
 			errThrow(c, 400, "400", "400")
 			return
 		}
-	} else {
-		fExt = "nil"
 	}
 
+	// if it doesn't match the key size or it isn't alphanumeric - throw it out
 	if !valid.IsAlphanumeric(rUid) || len(rUid) != uidSize {
-		log.Error().Err(err).Str("func", fn).Msg("request discarded as invalid")
+		slog.Error().Msg("request discarded as invalid") // these limits should be variables eventually
 		errThrow(c, 400, "400", "400")
 		return
 	}
 
-	// now that we think its a valid request we will query
-	log.Debug().Str("func", fn).Str("rUid", rUid).Msg("request validated")
+	// query bitcask for the id
 	fBytes, _ := txtDB.Get([]byte(rUid))
 	if fBytes == nil {
-		log.Error().Err(err).Str("func", fn).Str("rUid", rUid).Msg("no corresponding file for this id")
-		errThrow(c, 404, "404", "File not found")
+		slog.Error().Str("rUid", rUid).Msg("no corresponding file for this id")
+		errThrow(c, 404, "404", "file not found")
 		return
 	}
 
-	c.Data(200, "text/plain", fBytes)
+	file, _ := termbin.Deflate(fBytes)
+	c.Data(200, "text/plain", file)
 
-	log.Info().Str("func", fn).Str("rUid", rUid).Msg("Success")
+	slog.Info().Str("rUid", rUid).Msg("success")
 }
 
-func txtPost(c *gin.Context) {
-	fn = "txtPost"
+func txtDel(c *gin.Context) {
+	slog := log.With().
+		Str("caller", "txtDel").Logger()
 
-	t := c.PostForm("txt")
-	priv := c.PostForm("priv")
+	slog.Debug().Msg("new_request") // received request
 
-	tbyte := []byte(t)
+	if !validateKey(c.Param("key")) {
+		errThrow(c, 400, "400", "400")
+		return
+	}
 
-	if err != nil {
-		log.Error().Err(err).Str("fn", fn).Msg("Oh?")
+	rKey := c.Param("key")
+
+	targetTxt, _ := keyDB.Get([]byte(rKey))
+	if targetTxt == nil || !strings.Contains(string(targetTxt), "t.") {
+		slog.Warn().Str("rkey", rKey).Msg("no txt delete entry found with provided key")
+		errThrow(c, 400, "400", "400")
+		return
+	}
+
+	t := strings.Split(string(targetTxt), ".")[1]
+
+	if !txtDB.Has([]byte(t)) {
+		slog.Warn().Str("rkey", rKey).Msg("corresponding image not found in database!")
+		errThrow(c, 500, "500", "500") // this shouldn't happen...?
+		return
+	}
+	if err := txtDB.Delete([]byte(t)); err != nil {
+		slog.Error().Str("rkey", t).Msg("delete failed!")
 		errThrow(c, 500, "500", "500")
 		return
 	}
 
-	if len(t) == 0 {
-		log.Warn().Str("fn", fn).Msg("received an empty request")
-		errThrow(c, 400, "400", "400")
+	if txtDB.Has([]byte(t)) {
+		slog.Error().Str("rkey", t).Msg("delete failed!?")
+		errThrow(c, 500, "500", "500")
 		return
 	}
 
-	if c.ContentType() != "text/plain" {
-		log.Warn().Str("fn", fn).Str("ContentType", c.ContentType()).Msg("received a non-text content-type")
-		errThrow(c, 400, "400", "400")
-		return
-	}
-
-	// an optional switch for a privnote style burn after read
-	// priv := c.GetBool("private")
-
+	slog.Info().Str("rkey", t).Msg("Image file deleted successfully")
+	slog.Debug().Str("rkey", t).Msg("Removing delete key entry")
+	err = keyDB.Delete([]byte(rKey))
 	if err != nil {
-		// incoming POST data is invalid
-		errThrow(c, http.StatusBadRequest, err.Error(), "400") // 400 bad request
+		slog.Error().Str("rkey", t).Msg("Couldn't delete key")
+		// it would be insane to try and delete the hash here
+	} // if someone is uploading this image again after del
+	c.JSON(200, "DELETE_SUCCESS") // and the file corresponding to the hash no longer exists
+	// we will delete the hash entry then and re-add then
+}
+
+//func serveTermbin() {
+func serveTermbin() {
+	go func() {
+		for {
+			incoming()
+		}
+	}()
+	err := termbin.Listen("", txtPort)
+	if err != nil {
+		println(err.Error())
+		return
 	}
-
-	log.Debug().Str("func", fn).Msg("New paste")
-
-	if priv == "on" {
-		// check for dupes
-		log.Debug().Str("func", fn).Msg("calculating blake2b checksum")
-		Hashr, _ := blake2b.New(64, nil)
-		Hashr.Write(tbyte)
-		hash := Hashr.Sum(nil)
-		log.Debug().Str("func", fn).Msg("Checking for duplicate's in database")
-		txtRef, _ := txtDB.Get(hash)
-		ogUid := string(txtRef)
-
-		if txtRef != nil {
-			log.Debug().Str("func", fn).Str("ogUid", ogUid).Msg("duplicate checksum in hash database, checking if file still exists...")
-			if txtDB.Has(txtRef) {
-				log.Debug().Str("func", fn).Str("ogUid", ogUid).Msg("duplicate file found! returning original URL")
-				// they weren't the original uploader so they don't get a delete key
-				txtFin(c, ogUid, "nil")
-				return
-			} else {
-				log.Debug().Str("func", fn).Str("ogUid", ogUid).Msg("stale hash found, deleting entry...")
-				hashDB.Delete(hash)
-			}
-		}
-		log.Info().Str("func", fn).Msg("no duplicate txts found, generating uid and delete key")
-
-		// generate identifier and delete key based on configured sizes
-		uid := gouid.String(uidSize, gouid.MixedCaseAlphaNum)
-		key := gouid.String(keySize, gouid.MixedCaseAlphaNum)
-
-		// lets make sure that we don't clash even though its highly unlikely
-		for uidRef, _ := txtDB.Get([]byte(uid)); uidRef != nil; {
-			log.Info().Str("func", fn).Msg("uid already exists! generating another...")
-			uid = gouid.String(uidSize, gouid.MixedCaseAlphaNum)
-		}
-		for keyRef, _ := keyDB.Get([]byte(key)); keyRef != nil; {
-			log.Info().Str("func", fn).Msg(" delete key already exists! generating another...")
-			key = gouid.String(keySize, gouid.MixedCaseAlphaNum)
-		}
-
-		// save checksum to db to prevent dupes in the future
-		hashDB.Put([]byte(hash), []byte(uid))
-
-		log.Debug().Str("func", fn).Str("uid", uid).Msg("saving file to database")
-
-		err = txtDB.Put([]byte(uid), []byte(tbyte))
-		if err != nil {
-			errThrow(c, 500, err.Error(), "upload failed")
-			return
-		}
-
-		// add delete key to database with txt prefix
-		err = keyDB.Put([]byte(key), []byte("t."+uid))
-		if err != nil {
-			errThrow(c, http.StatusInternalServerError, err.Error(), "internal error")
-			return
-		}
-	}
-
-	log.Debug().Str("func", fn).Str("uid", uid).Msg("saved to database successfully, sending to txtFin")
-
-	txtFin(c, uid, key)
-
 }

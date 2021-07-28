@@ -2,10 +2,40 @@ package main
 
 import (
 	"fmt"
+	"github.com/prologic/bitcask"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	"os"
 	"strconv"
+)
+
+////////////// global declarations
+var (
+	// datastores
+	imgDB  *bitcask.Bitcask
+	hashDB *bitcask.Bitcask
+	keyDB  *bitcask.Bitcask
+	urlDB  *bitcask.Bitcask
+	txtDB  *bitcask.Bitcask
+
+	// config directives
+	debugBool         bool
+	baseUrl           string
+	webPort           string
+	webIP             string
+	dbDir             string
+	logDir            string
+	uidSize           int
+	keySize           int
+	txtPort           string
+
+	// utilitarian globals
+	err error
+	fn  string
+	s   string
+	i   int
+	f   *os.File
 )
 
 func configRead() {
@@ -34,34 +64,17 @@ func configRead() {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 
-	// base URL of site
-	s = "http.baseurl"
-	baseUrl = viper.GetString(s)
+	baseUrl = viper.GetString("http.baseurl")
 
-	// bind port
-	s = "http.port"
-	i := viper.GetInt(s)
-	webPort = strconv.Itoa(i) // int looks cleaner in config
+	i := viper.GetInt("http.port")
+	webPort = strconv.Itoa(i)
 
-	// bind IP
-	s = "http.bindip"
-	webIP = viper.GetString(s)
-
-	// database location (main storage)
-	s = "files.data"
-	dbDir = viper.GetString(s)
-
-	// logfile location
-	s = "files.logs"
-	logDir = viper.GetString(s)
-
-	// character count of unique IDs for posts
-	s = "img.uidsize"
-	uidSize = viper.GetInt(s)
-
-	// size of generated unique delete keys
-	s = "img.delkeysize"
-	keySize = viper.GetInt(s)
+	webIP = viper.GetString("http.bindip")
+	dbDir = viper.GetString("files.data")
+	logDir = viper.GetString("files.logs")
+	uidSize = viper.GetInt("global.uidsize")
+	keySize = viper.GetInt("global.delkeysize")
+	txtPort = viper.GetString("txt.port")
 
 	log.Debug().Str("baseUrl", baseUrl).Str("webIP", webIP).Str("webPort", webPort).Msg("Web")
 	log.Debug().Str("logDir", logDir).Str("dbDir", dbDir).Msg("Filesystem")
