@@ -1,7 +1,7 @@
 title = "tcp.ac config"
 
 [global]
-debug      = true
+debug      = false
 
 [http]
 baseurl    = "http://192.168.69.1/"
