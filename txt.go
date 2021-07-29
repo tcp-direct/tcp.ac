@@ -192,9 +192,7 @@ func txtView(c *gin.Context) {
 func txtDel(c *gin.Context) {
 	slog := log.With().
 		Str("caller", "txtDel").Logger()
-
-	slog.Debug().Msg("new_request") // received request
-
+	slog.Debug().Msg("new_request")
 	if !validateKey(c.Param("key")) {
 		errThrow(c, 400, "400", "400")
 		return
@@ -228,15 +226,13 @@ func txtDel(c *gin.Context) {
 		return
 	}
 
-	slog.Info().Str("rkey", t).Msg("Image file deleted successfully")
+	slog.Info().Str("rkey", t).Msg("Text file deleted successfully")
 	slog.Debug().Str("rkey", t).Msg("Removing delete key entry")
 	err = keyDB.Delete([]byte(rKey))
 	if err != nil {
 		slog.Error().Str("rkey", t).Msg("Couldn't delete key")
-		// it would be insane to try and delete the hash here
-	} // if someone is uploading this image again after del
-	c.JSON(200, "DELETE_SUCCESS") // and the file corresponding to the hash no longer exists
-	// we will delete the hash entry then and re-add then
+	}
+	c.JSON(200, "DELETE_SUCCESS")
 }
 
 //func serveTermbin() {

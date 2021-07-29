@@ -27,6 +27,10 @@ func dbInit() {
 }
 
 func dbSync() {
+	hashDB.Merge()
+	keyDB.Merge()
+	imgDB.Merge()
+	urlDB.Merge()
 	hashDB.Sync()
 	keyDB.Sync()
 	imgDB.Sync()

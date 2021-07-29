@@ -21,19 +21,18 @@ var fExt string
 func imgDel(c *gin.Context) {
 	slog := log.With().Str("caller", "imgView").Logger()
 
-	slog.Debug().Msg("Request received!") // received request
 	rKey := c.Param("key")
 
 	if !validateKey(rKey) {
 		slog.Error().Msg("delete request failed sanity check!")
-		errThrow(c, 400, "400", "400")
+		errThrow(c, 400, "invalid request", "invalid request")
 		return
 	}
 
 	targetImg, _ := keyDB.Get([]byte(rKey))
 	if targetImg == nil || !strings.Contains(string(targetImg), "i.") {
 		slog.Error().Str("rkey", rKey).Msg("no img delete entry found with provided key")
-		errThrow(c, 400, "400", "400")
+		errThrow(c, 400, "invalid request", "invalid request")
 		return
 	}
 
@@ -81,7 +80,7 @@ func imgView(c *gin.Context) {
 		slog.Debug().Str("ext", fExt).Msg("detected file extension")
 		if fExt != "png" && fExt != "jpg" && fExt != "jpeg" && fExt != "gif" {
 			slog.Error().Msg("Bad file extension!")
-			errThrow(c, 400, "400", "400")
+			errThrow(c, 400, "invalid request", "invalid request")
 			return
 		}
 	} else {
@@ -90,8 +89,11 @@ func imgView(c *gin.Context) {
 
 	// if it doesn't match the key size or it isn't alphanumeric - throw it out
 	if !valid.IsAlphanumeric(rUid) || len(rUid) != uidSize {
-		slog.Error().Msg("request discarded as invalid") // these limits should be variables eventually
-		errThrow(c, 400, "400", "400")
+		slog.Warn().
+		Str("remoteaddr", c.ClientIP()).
+		Msg("request discarded as invalid")
+
+		errThrow(c, 400, "invalid request", "invalid request")
 		return
 	}
 
@@ -111,7 +113,7 @@ func imgView(c *gin.Context) {
 	imageFormat, ok := checkImage(file)
 	if !ok {
 		// extra sanity check to make sure we don't serve non-image data that somehow got into the database
-		errThrow(c, http.StatusBadRequest, "400", "400")
+		errThrow(c, http.StatusBadRequest, "invalid request", "invalid request")
 		slog.Error().Str("rUid", rUid).Msg("the file we grabbed is not an image!?")
 		return
 	} else {
@@ -122,7 +124,7 @@ func imgView(c *gin.Context) {
 	// additional extension sanity check - if they're gonna use an extension it needs to be the right one
 	if fExt != "nil" && fExt != imageFormat {
 		slog.Error().Str("rUid", rUid).Msg("requested file extension does not match filetype")
-		errThrow(c, 400, "400", "400")
+		errThrow(c, 400, "invalid request", "invalid request")
 		return
 	}
 
@@ -145,7 +147,7 @@ func imgPost(c *gin.Context) {
 	// check if incoming POST data is invalid
 	f, err := c.FormFile("upload")
 	if err != nil {
-		errThrow(c, http.StatusBadRequest, err.Error(), "400")
+		errThrow(c, http.StatusBadRequest, err.Error(), "invalid request")
 	}
 
 	slog.Debug().Str("filename", f.Filename).Msg("[+] New upload")
@@ -156,11 +158,9 @@ func imgPost(c *gin.Context) {
 		errThrow(c, http.StatusInternalServerError, err.Error(), "error processing file\n")
 	}
 
-	// verify the incoming file is an image
-	slog.Debug().Msg("verifying file is an image")
 	imageFormat, ok := checkImage(file)
 	if !ok {
-		errThrow(c, http.StatusBadRequest, "400", "input does not appear to be an image")
+		errThrow(c, http.StatusBadRequest, "invalid request", "input does not appear to be an image")
 		return
 	} else {
 		slog.Debug().Msg("image file type detected")
@@ -168,12 +168,11 @@ func imgPost(c *gin.Context) {
 
 	// dump this into a byte object and scrub it
 	// TO-DO: Write our own function for scrubbing exif
-	slog.Debug().Msg("dumping byte form of file")
 	fbytes, err := ioutil.ReadAll(file)
 	if imageFormat != "gif" {
-		slog.Debug().Err(err).Msg("error scrubbing exif")
 		Scrubbed, err = exifremove.Remove(fbytes)
 		if err != nil {
+			slog.Warn().Err(err).Msg("error scrubbing exif")
 			errThrow(c, http.StatusInternalServerError, err.Error(), "error scrubbing exif")
 			return
 		}
@@ -187,8 +186,6 @@ func imgPost(c *gin.Context) {
 	Hashr, _ := blake2b.New(64, nil)
 	Hashr.Write(Scrubbed)
 	hash := Hashr.Sum(nil)
-
-	slog.Debug().Msg("checking for duplicate files")
 
 	// the keys (stored in memory) for hashDb are hashes
 	// making it quick to find duplicates. the value is the uid
@@ -216,8 +213,6 @@ func imgPost(c *gin.Context) {
 			hashDB.Delete(hash)
 		}
 	}
-
-	slog.Info().Msg("no duplicate images found, generating uid and delete key")
 
 	// generate new uid and delete key
 	uid := gouid.String(uidSize, gouid.MixedCaseAlphaNum)
