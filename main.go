@@ -65,7 +65,7 @@ func init() {
 func main() {
 	defer dbSync()
 	go func() {
-		c := make(chan os.Signal)
+		c := make(chan os.Signal, 5)
 		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 		for {
 			select {

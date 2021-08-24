@@ -3,31 +3,15 @@ package main
 import (
 	valid "github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
-	cache "github.com/patrickmn/go-cache"
 	"github.com/rs/zerolog/log"
 	"github.com/twharmon/gouid"
 	"golang.org/x/crypto/blake2b"
 	"strings"
 	"tcp.ac/termbin"
-	"time"
-)
-
-var (
-	Users *cache.Cache
 )
 
 func init() {
 	termbin.UseChannel = true
-	Users = cache.New(termbin.Rate*time.Second, 30*time.Second)
-}
-
-func txtThrottled(addr string) bool {
-	if _, ok := Users.Get(addr); !ok {
-		Users.Set(addr, 1, 0)
-		return false
-	} else {
-		return true
-	}
 }
 
 func incoming() {
@@ -59,7 +43,7 @@ func incoming() {
 				Msg(msg.Content)
 
 		case "FINAL":
-			log.Info().
+			log.Debug().
 				Str("RemoteAddr", msg.RAddr).
 				Int("Size", msg.Size).
 				Msg(msg.Content)
@@ -147,7 +131,7 @@ func txtView(c *gin.Context) {
 	slog := log.With().Str("caller", "txtView").Logger()
 
 	raddr, _ := c.RemoteIP()
-	if txtThrottled(raddr.String()) {
+	if termbin.Rater.Check(&termbin.TermbinSource{Actual: raddr}) {
 		errThrow(c, 429, "ratelimited", "too many requests")
 		return
 	}

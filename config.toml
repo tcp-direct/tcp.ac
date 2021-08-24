@@ -1,7 +1,7 @@
 title = "tcp.ac config"
 
 [global]
-debug      = true
+debug      = false
 uidsize    = 5
 delkeysize = 12
 
@@ -13,8 +13,9 @@ port       = 8080
 
 [txt]
 # string: port to listen on for termbin clone
-port       = "9999"
+port       = "9988"
 
 [files]
-data       = "/etc/tcpac/data/"
-logs	   = "/etc/tcpac/logs/"
+data       = "./data/"
+logs	   = "./logs/"
+sizelimit  = 24

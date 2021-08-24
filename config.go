@@ -20,15 +20,16 @@ var (
 	txtDB  *bitcask.Bitcask
 
 	// config directives
-	debugBool         bool
-	baseUrl           string
-	webPort           string
-	webIP             string
-	dbDir             string
-	logDir            string
-	uidSize           int
-	keySize           int
-	txtPort           string
+	debugBool bool
+	baseUrl   string
+	webPort   string
+	webIP     string
+	dbDir     string
+	logDir    string
+	uidSize   int
+	keySize   int
+	txtPort   string
+	maxSize   uint64
 
 	// utilitarian globals
 	err error
@@ -75,10 +76,6 @@ func configRead() {
 	uidSize = viper.GetInt("global.uidsize")
 	keySize = viper.GetInt("global.delkeysize")
 	txtPort = viper.GetString("txt.port")
-
-	log.Debug().Str("baseUrl", baseUrl).Str("webIP", webIP).Str("webPort", webPort).Msg("Web")
-	log.Debug().Str("logDir", logDir).Str("dbDir", dbDir).Msg("Filesystem")
-	log.Debug().Int("keySize", keySize).Int("uidSize", uidSize).Msg("UUIDs")
-
+	maxSize = viper.GetUint64("files.maxuploadsize")
 	//
 }

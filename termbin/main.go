@@ -2,8 +2,10 @@ package termbin
 
 import (
 	"golang.org/x/tools/godoc/util"
+	ipa "inet.af/netaddr"
 	"net"
 	"strconv"
+	"tcp.ac/ratelimit"
 	"time"
 )
 
@@ -20,6 +22,8 @@ var (
 	Gzip = true
 	// Toggle this to enable or disable sending status messages through an exported channel, otherwise print
 	UseChannel = true
+
+	Rater *ratelimit.Queue
 )
 
 // Message is a struct that encapsulates status messages to send down the Msg channel
@@ -31,9 +35,22 @@ type Message struct {
 	Size    int
 }
 
+type TermbinSource struct {
+	Actual net.IP
+	Addr   net.Addr
+}
+
+func (t *TermbinSource) UniqueKey() string {
+	if t.Addr != nil {
+		t.Actual = net.ParseIP(ipa.MustParseIPPort(t.Addr.String()).String())
+	}
+	return t.Actual.String()
+}
+
 func init() {
 	Msg = make(chan Message)
 	Reply = make(chan Message)
+	Rater = ratelimit.NewDefaultLimiter(new(TermbinSource))
 }
 
 func termStatus(m Message) {
@@ -57,7 +74,7 @@ func serve(c net.Conn) {
 		done   bool
 	)
 
-	if isThrottled(c.RemoteAddr().String()) {
+	if Rater.Check(&TermbinSource{Addr: c.RemoteAddr()}) {
 		c.Write([]byte("RATELIMIT_REACHED"))
 		c.Close()
 		termStatus(Message{Type: "ERROR", RAddr: c.RemoteAddr().String(), Content: "RATELIMITED"})
@@ -116,7 +133,7 @@ func serve(c net.Conn) {
 	}
 
 	termStatus(Message{Type: "FINAL", RAddr: c.RemoteAddr().String(), Size: len(final), Bytes: final, Content: "SUCCESS"})
-	url := <- Reply
+	url := <-Reply
 	switch url.Type {
 	case "URL":
 		c.Write([]byte(url.Content))

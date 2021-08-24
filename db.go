@@ -6,8 +6,9 @@ import (
 )
 
 func dbInit() {
+	megabyte := float64(1024 * 1024)
 	opts := []bitcask.Option{
-		bitcask.WithMaxValueSize(24 / 1024 / 1024),
+		bitcask.WithMaxValueSize(maxSize * uint64(megabyte)),
 	}
 
 	hashDB, _ = bitcask.Open(dbDir+"hsh", opts...) // this will probably only be for images?

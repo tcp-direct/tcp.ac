@@ -90,8 +90,8 @@ func imgView(c *gin.Context) {
 	// if it doesn't match the key size or it isn't alphanumeric - throw it out
 	if !valid.IsAlphanumeric(rUid) || len(rUid) != uidSize {
 		slog.Warn().
-		Str("remoteaddr", c.ClientIP()).
-		Msg("request discarded as invalid")
+			Str("remoteaddr", c.ClientIP()).
+			Msg("request discarded as invalid")
 
 		errThrow(c, 400, "invalid request", "invalid request")
 		return
@@ -256,7 +256,6 @@ func imgPost(c *gin.Context) {
 		Key:  key,
 		Priv: priv,
 	}
-
 
 	post.Serve(c)
 
