@@ -104,7 +104,7 @@ func termPost(b []byte) {
 
 	err = txtDB.Put([]byte(uid), b)
 	if err != nil {
-		slog.Error().Msg("failed to save text!")
+		slog.Error().Err(err).Msg("failed to save text!")
 		termbin.Reply <- termbin.Message{Type: "ERROR", Content: "internal server error"}
 		return
 	}
@@ -135,9 +135,6 @@ func txtView(c *gin.Context) {
 		errThrow(c, 429, "ratelimited", "too many requests")
 		return
 	}
-
-	// the user can access their image with or without a file extension in URI
-	slog.Debug().Msg("request received") //  however it must be a valid extension (more checks further down)
 
 	sUid := strings.Split(c.Param("uid"), ".")
 	rUid := sUid[0]

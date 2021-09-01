@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/prologic/bitcask"
+	"git.tcp.direct/tcp.direct/bitcask-mirror"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -29,7 +29,7 @@ var (
 	uidSize   int
 	keySize   int
 	txtPort   string
-	maxSize   uint64
+	maxSize   int
 
 	// utilitarian globals
 	err error
@@ -76,6 +76,6 @@ func configRead() {
 	uidSize = viper.GetInt("global.uidsize")
 	keySize = viper.GetInt("global.delkeysize")
 	txtPort = viper.GetString("txt.port")
-	maxSize = viper.GetUint64("files.maxuploadsize")
+	maxSize = viper.GetInt("files.maxuploadsize")
 	//
 }

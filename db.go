@@ -1,14 +1,14 @@
 package main
 
 import (
-	"github.com/prologic/bitcask"
+	"git.tcp.direct/tcp.direct/bitcask-mirror"
 	"github.com/rs/zerolog/log"
 )
 
 func dbInit() {
-	megabyte := float64(1024 * 1024)
+	megabyte := (float64)(1024 * 1024)
 	opts := []bitcask.Option{
-		bitcask.WithMaxValueSize(maxSize * uint64(megabyte)),
+		bitcask.WithMaxValueSize(uint64(maxSize) * uint64(megabyte)),
 	}
 
 	hashDB, _ = bitcask.Open(dbDir+"hsh", opts...) // this will probably only be for images?
@@ -20,7 +20,7 @@ func dbInit() {
 	imgDB, _ = bitcask.Open(dbDir+"img", opts...) // literal image files
 	log.Info().Msg("Initializing img database")
 
-	txtDB, _ = bitcask.Open(dbDir + "txt") // pastebin
+	txtDB, _ = bitcask.Open(dbDir+"txt", opts...) // pastebin
 	log.Info().Msg("Initializing txt database")
 
 	urlDB, _ = bitcask.Open(dbDir + "url") // url shortener entries

@@ -18,7 +18,7 @@ func init() {
 	p := termenv.ColorProfile()
 	out = out.Foreground(p.Color("#948DB8"))
 
-	fmt.Println(out)
+		fmt.Println(out)
 
 	// initialize the logger before the config: that way we can output debug lines
 	// pertaining to the parsing of the configuration init

@@ -24,35 +24,32 @@ func imgDel(c *gin.Context) {
 	rKey := c.Param("key")
 
 	if !validateKey(rKey) {
-		slog.Error().Msg("delete request failed sanity check!")
-		errThrow(c, 400, "invalid request", "invalid request")
+		errThrow(c, 400, "failed to validate delete key", "invalid request")
 		return
 	}
 
 	targetImg, _ := keyDB.Get([]byte(rKey))
 	if targetImg == nil || !strings.Contains(string(targetImg), "i.") {
-		slog.Error().Str("rkey", rKey).Msg("no img delete entry found with provided key")
-		errThrow(c, 400, "invalid request", "invalid request")
+		errThrow(c, 400, "no img delete entry found with provided key", "invalid request")
 		return
 	}
 
 	finalTarget := strings.Split(string(targetImg), ".")
 
 	if !imgDB.Has([]byte(finalTarget[1])) {
-		slog.Error().Str("rkey", rKey).Msg("corresponding image not found in database!")
-		errThrow(c, 500, "500", "500") // this shouldn't happen...?
+		// this shouldn't happen...?
+		errThrow(c, 500, "corresponding image todelete not found in database!", "internal server error")
 		return
 	}
 	err := imgDB.Delete([]byte(finalTarget[1]))
 	if err != nil {
-		slog.Error().Str("rkey", finalTarget[1]).Msg("delete failed!")
-		errThrow(c, 500, "500", "500")
+		errThrow(c, 500, "failed to delete key even though key seemed valid!?"+err.Error(), "internal server error")
 		return
 	}
 
 	if imgDB.Has([]byte(finalTarget[1])) {
 		slog.Error().Str("rkey", finalTarget[1]).Msg("delete failed!?")
-		errThrow(c, 500, "500", "500")
+		errThrow(c, 500, "500", "internal server error")
 		return
 	}
 
@@ -69,9 +66,6 @@ func imgDel(c *gin.Context) {
 
 func imgView(c *gin.Context) {
 	slog := log.With().Str("caller", "imgView").Logger()
-
-	// the user can access their image with or without a file extension in URI
-	slog.Debug().Msg("request received") //  however it must be a valid extension (more checks further down)
 	sUid := strings.Split(c.Param("uid"), ".")
 	rUid := sUid[0]
 
@@ -79,8 +73,7 @@ func imgView(c *gin.Context) {
 		fExt = strings.ToLower(sUid[1])
 		slog.Debug().Str("ext", fExt).Msg("detected file extension")
 		if fExt != "png" && fExt != "jpg" && fExt != "jpeg" && fExt != "gif" {
-			slog.Error().Msg("Bad file extension!")
-			errThrow(c, 400, "invalid request", "invalid request")
+			errThrow(c, 400, "bad file extension", "invalid request")
 			return
 		}
 	} else {
@@ -169,11 +162,14 @@ func imgPost(c *gin.Context) {
 	// dump this into a byte object and scrub it
 	// TO-DO: Write our own function for scrubbing exif
 	fbytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		errThrow(c, http.StatusInternalServerError, err.Error(), "internal server error")
+		return
+	}
 	if imageFormat != "gif" {
 		Scrubbed, err = exifremove.Remove(fbytes)
 		if err != nil {
-			slog.Warn().Err(err).Msg("error scrubbing exif")
-			errThrow(c, http.StatusInternalServerError, err.Error(), "error scrubbing exif")
+			errThrow(c, http.StatusInternalServerError, err.Error(), "internal server error")
 			return
 		}
 	} else {

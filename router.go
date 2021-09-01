@@ -55,10 +55,11 @@ func httpRouter() {
 	router.GET("/favicon.ico", favIcon)
 	router.GET("/", placeHolder)
 
+	router.GET("/ip", myIP)
+
 	imgR := router.Group("/i")
 	{
 		imgR.GET("/", placeHolder)
-		// put looks nicer even though its actually POST
 		imgR.POST("/put", imgPost)
 		imgR.GET("/:uid", imgView)
 	}

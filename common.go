@@ -3,7 +3,6 @@ package main
 import (
 	valid "github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/rs/zerolog/log"
 )
 
@@ -13,8 +12,6 @@ type Post struct {
 	Key  string
 	Priv bool
 }
-
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 func validateKey(rKey string) bool {
 	// if it doesn't match the key size or it isn't alphanumeric - throw it out

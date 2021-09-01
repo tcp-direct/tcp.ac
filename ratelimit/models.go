@@ -2,6 +2,7 @@ package ratelimit
 
 import (
 	cache "github.com/patrickmn/go-cache"
+	"sync"
 	"time"
 )
 
@@ -36,6 +37,8 @@ type Queue struct {
 	Ruleset Policy
 	Known   map[interface{}]time.Duration
 	Debug   bool
+
+	mu sync.Mutex
 }
 
 // Rules defines the mechanics of our ratelimiter

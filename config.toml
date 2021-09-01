@@ -1,13 +1,12 @@
 title = "tcp.ac config"
 
 [global]
-debug      = false
+debug      = true
 uidsize    = 5
 delkeysize = 12
 
 [http]
 baseurl    = "http://127.0.0.1:8080/"
-basehost   = "127.0.0.1"
 bindip     = "127.0.0.1"
 port       = 8080
 
@@ -18,4 +17,4 @@ port       = "9988"
 [files]
 data       = "./data/"
 logs	   = "./logs/"
-sizelimit  = 24
+sizelimit  = 48

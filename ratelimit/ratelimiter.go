@@ -45,13 +45,14 @@ func (q *Queue) Check(from Identity) bool {
 			q.debugPrint("ratelimit (limited): ", count, src)
 			return true
 		}
-
+		q.mu.Lock()
 		if _, ok := q.Known[src]; !ok {
 			q.Known[src] = q.Ruleset.Window
 		}
 		q.Known[src]++
 		q.Patrons.Replace(src, count, q.Known[src]*time.Second)
 		q.debugPrint("ratelimit (limited): ", count, " ", src, " ", q.Known[src])
+		q.mu.Unlock()
 		return true
 	}
 	return false
