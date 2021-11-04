@@ -75,7 +75,7 @@ function stop_spinner {
 
 ################################################
 start_spinner "uploading $1..."
-OUT=$(curl -s -F "upload=@$1" -u "tcpac:kuevEacshmej5" https://tcp.ac/i/put)
+OUT=$(curl -s -F "upload=@$1" https://tcp.ac/i/put)
 if ! [[ "$OUT" == *"Imgurl"* ]]; then
 	echo ""
 	echo "ERROR: $OUT"
