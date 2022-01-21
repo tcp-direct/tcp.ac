@@ -2,26 +2,19 @@ package main
 
 import (
 	"fmt"
-	"git.tcp.direct/tcp.direct/bitcask-mirror"
+	"os"
+	"strconv"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
-	"os"
-	"strconv"
 )
 
-////////////// global declarations
+// //////////// global declarations
 var (
-	// datastores
-	imgDB  *bitcask.Bitcask
-	hashDB *bitcask.Bitcask
-	keyDB  *bitcask.Bitcask
-	urlDB  *bitcask.Bitcask
-	txtDB  *bitcask.Bitcask
-
 	// config directives
 	debugBool bool
-	baseUrl   string
+	baseURL   string
 	webPort   string
 	webIP     string
 	dbDir     string
@@ -65,7 +58,7 @@ func configRead() {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 
-	baseUrl = viper.GetString("http.baseurl")
+	baseURL = viper.GetString("http.baseurl")
 
 	i := viper.GetInt("http.port")
 	webPort = strconv.Itoa(i)

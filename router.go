@@ -2,9 +2,13 @@ package main
 
 import (
 	"encoding/base64"
+	"io"
+	"time"
+
 	"github.com/gin-contrib/gzip"
-	//	"github.com/gin-contrib/logger"
+	"github.com/gin-contrib/logger"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -26,22 +30,25 @@ func urlPost(c *gin.Context) {
 }
 
 func httpRouter() {
-
-	// after router dies
-	// close our DBs
-	defer hashDB.Close()
-	defer keyDB.Close()
-	defer imgDB.Close()
-	defer txtDB.Close()
-	defer urlDB.Close()
-
 	if !debugBool {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	router := gin.New()
 
-	//router.Use(logger.SetLogger())
+	router.SetTrustedProxies([]string{"127.0.0.1", "10.8.0.1"})
+
+	router.Use(logger.SetLogger(
+		logger.WithLogger(
+			func(c *gin.Context, w io.Writer, d time.Duration) zerolog.Logger {
+				return log.With().
+					Str("caller", c.ClientIP()).
+					Str("url", c.Request.URL.String()).
+					Str("uagent", c.Request.Header.Get("User-Agent")).
+					Dur("duration", d).Logger()
+			},
+		),
+	))
 
 	router.MaxMultipartMemory = 16 << 20 // crude POST limit (fix this)
 
@@ -55,36 +62,22 @@ func httpRouter() {
 	router.GET("/favicon.ico", favIcon)
 	router.GET("/", placeHolder)
 
-	router.GET("/ip", myIP)
+	router.GET("/ip", func(c *gin.Context) {
+		c.String(200, c.ClientIP())
+	})
 
 	imgR := router.Group("/i")
-	{
-		imgR.GET("/", placeHolder)
-		imgR.POST("/put", imgPost)
-		imgR.GET("/:uid", imgView)
-	}
+	imgR.GET("/", placeHolder)
+	imgR.POST("/put", imgPost)
+	imgR.GET("/:uid", imgView)
 
 	txtR := router.Group("/t")
-	{
-		txtR.GET("/", placeHolder)
-		txtR.GET("/:uid", txtView)
-	}
+	txtR.GET("/", placeHolder)
+	txtR.GET("/:uid", txtView)
 
 	delR := router.Group("/d")
-	{
-		delR.GET("/i/:key", imgDel)
-		delR.GET("/t/:key", txtDel)
-	}
-
-	//	txtR := router.Group("/t")
-	//	{
-	//		txtR.POST("/put", txtPost)
-	//	}
-
-	//	urlR := router.Group("/u")
-	//	{
-	//		urlR.POST("/put", urlPost)
-	//	}
+	delR.GET("/i/:key", imgDel)
+	delR.GET("/t/:key", txtDel)
 
 	log.Info().Str("webIP", webIP).Str("webPort", webPort).Msg("done; tcp.ac is live.")
 	router.Run(webIP + ":" + webPort)
