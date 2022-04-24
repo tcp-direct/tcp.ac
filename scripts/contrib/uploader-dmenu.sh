@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# https://git.tcp.direct/S4D
+#    https://git.tcp.direct/tcp.direct/tcp.ac/commit/c18f64059542e35144fd7a479e6758549d017753
+
 function tcpup {
         options="Upload an Image\nRecent Uploads\nCancel"
         selected=$(echo -e $options | dmenu -l 3 )

@@ -1,5 +1,17 @@
 #!/usr/bin/env bash
 
+#
+# tcp.ac uploader script, works in terminal or can be used with scrot.
+#
+# example openbox configuration to use scrot on the printscreen keybinding for easy image uploads:
+#
+#    <keybind key="Print">
+#      <action name="Execute">
+#        <command>scrot -f -s -e 'tcpac $f'</command>
+#      </action>
+#    </keybind>
+#
+
 ####################### https://github.com/tlatsas/bash-spinner
 
 function _spinner() {
@@ -11,7 +23,6 @@ function _spinner() {
 
     local on_success="DONE"
     local on_fail="FAIL"
-    local white="\e[1;37m"
     local green="\e[1;32m"
     local red="\e[1;31m"
     local nc="\e[0m"
@@ -83,10 +94,10 @@ if ! [[ "$OUT" == *"Imgurl"* ]]; then
 	stop_spinner 2
 	exit 2
 else
-	CLEAN=$(echo $OUT | sed 's|\\||g' | sed 's|"{"|{"|g' | sed 's|"}"|"}|g') 
-	echo $CLEAN | jq | tee $1.DELETEKEY
-	IMGURL=$(echo $CLEAN | awk -F ':' '{print $2 $3}' | awk -F ',' '{print $1}' | awk -F '}' '{print $1}' | sed -e 's|"||g' -e 's|"||g' -e 's|https|https:|g' -e 's|http\/\/|http:\/\/|g')
-	echo -n $IMGURL | xclip -sel clip
-	notify-send -i image-x-generic 'tcp.ac upload success' 'link copied to clipboard, delete key saved' -t 5000
+	_CLEAN=$(echo "$OUT" | sed 's|\\||g' | sed 's|"{"|{"|g' | sed 's|"}"|"}|g')
+	echo "$_CLEAN" | jq | tee "$1.DELETEKEY"
+	_IMGURL=$(echo "$_CLEAN" | awk -F ':' '{print $2 $3}' | awk -F ',' '{print $1}' | awk -F '}' '{print $1}' | sed -e 's|"||g' -e 's|"||g' -e 's|https|https:|g' -e 's|http\/\/|http:\/\/|g')
+	echo -n "$_IMGURL" | xclip -sel clip
+	notify-send -i image-x-generic 'tcp.ac upload success' 'link copied to clipboard, delete key saved in file adjacent to original image' -t 5000
 fi
 stop_spinner $?
