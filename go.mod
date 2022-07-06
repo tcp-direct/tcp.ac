@@ -8,7 +8,7 @@ require (
 	git.tcp.direct/kayos/putxt v0.0.0-20220121120403-b1d47147de54
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/gin-contrib/gzip v0.0.6
-	github.com/gin-contrib/logger v0.2.0
+	github.com/gin-contrib/logger v0.2.2
 	github.com/gin-gonic/gin v1.8.1
 	github.com/muesli/termenv v0.12.0
 	github.com/rs/zerolog v1.26.1
