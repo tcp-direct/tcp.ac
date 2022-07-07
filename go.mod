@@ -11,7 +11,7 @@ require (
 	github.com/gin-contrib/logger v0.2.2
 	github.com/gin-gonic/gin v1.8.1
 	github.com/muesli/termenv v0.12.0
-	github.com/rs/zerolog v1.26.1
+	github.com/rs/zerolog v1.27.0
 	github.com/scottleedavis/go-exif-remove v0.0.0-20190908021517-58bdbaac8636
 	github.com/spf13/viper v1.12.0
 	github.com/twharmon/gouid v0.5.2
@@ -39,6 +39,7 @@ require (
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
