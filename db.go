@@ -2,7 +2,7 @@ package main
 
 import (
 	prologic "git.tcp.direct/Mirrors/bitcask-mirror"
-	"git.tcp.direct/kayos/database/bitcask"
+	"git.tcp.direct/tcp.direct/database/bitcask"
 )
 
 var stores = []string{"hsh", "key", "img", "txt", "url"}
