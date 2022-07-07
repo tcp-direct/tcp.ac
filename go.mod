@@ -14,7 +14,7 @@ require (
 	github.com/rs/zerolog v1.26.1
 	github.com/scottleedavis/go-exif-remove v0.0.0-20190908021517-58bdbaac8636
 	github.com/spf13/viper v1.12.0
-	github.com/twharmon/gouid v0.3.0
+	github.com/twharmon/gouid v0.5.2
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 )
 

@@ -521,8 +521,8 @@ github.com/tidwall/match v1.0.3/go.mod h1:eRSPERbgtNPcGhD8UCthc6PmLEQXEWd3PRB5JT
 github.com/tidwall/redcon v1.4.1/go.mod h1:XwNPFbJ4ShWNNSA2Jazhbdje6jegTCcwFR6mfaADvHA=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926/go.mod h1:9ESjWnEqriFuLhtthL60Sar/7RFoluCcXsuvEwTV5KM=
-github.com/twharmon/gouid v0.3.0 h1:IQ6Zx0ozy2PCNdPNZ/PLjN+Z6BFPUbELq0/SL0sxCJE=
-github.com/twharmon/gouid v0.3.0/go.mod h1:Ruorlc0y7P3Dy3IwLks8m6Rt96O+inLQO3El93ShqdU=
+github.com/twharmon/gouid v0.5.2 h1:fqFUx700Ishb4dZaXpRv95CGGGR1CBuCkjM0t62XAxw=
+github.com/twharmon/gouid v0.5.2/go.mod h1:m1SyQo0sYYbukI1yNZ1WRk980fV2XWBuYGAtMo/AmQ8=
 github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=
 github.com/ugorji/go v1.1.7/go.mod h1:kZn38zHttfInRq0xu/PH0az30d+z6vm202qpg1oXVMw=
 github.com/ugorji/go v1.2.7 h1:qYhyWUUd6WbiM+C6JZAUkIJt/1WrjzNHY9+KCIjVqTo=
