@@ -1,10 +1,10 @@
 module git.tcp.direct/tcp.direct/tcp.ac
 
-go 1.17
+go 1.18
 
 require (
-	git.tcp.direct/Mirrors/bitcask-mirror v0.0.0-20220121113503-924280a7bbf0
-	git.tcp.direct/kayos/database v0.0.0-20220121105725-4d08c92d9977
+	git.tcp.direct/Mirrors/bitcask-mirror v0.0.0-20220228092422-1ec4297c7e34
+	git.tcp.direct/kayos/database v0.0.0-20220214113818-7e12d11ea911
 	git.tcp.direct/kayos/putxt v0.0.0-20220121120403-b1d47147de54
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/gin-contrib/gzip v0.0.6
@@ -15,11 +15,11 @@ require (
 	github.com/scottleedavis/go-exif-remove v0.0.0-20190908021517-58bdbaac8636
 	github.com/spf13/viper v1.12.0
 	github.com/twharmon/gouid v0.5.2
-	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
+	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
 )
 
 require (
-	git.tcp.direct/kayos/common v0.0.0-20220101220121-7222e460b190 // indirect
+	git.tcp.direct/kayos/common v0.3.2 // indirect
 	github.com/abcum/lcp v0.0.0-20201209214815-7a3f3840be81 // indirect
 	github.com/dsoprea/go-exif v0.0.0-20190901173045-3ce78807c90f // indirect
 	github.com/dsoprea/go-jpeg-image-structure v0.0.0-20190422055009-d6f9ba25cf48 // indirect
