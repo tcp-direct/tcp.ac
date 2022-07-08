@@ -1,20 +1,24 @@
-title = "tcp.ac config"
-
-[global]
-debug      = true
-uidsize    = 5
-delkeysize = 12
+[data]
+directory = '.data'
+max_key_size_mb = 10
+max_value_size_mb = 20
 
 [http]
-baseurl    = "http://127.0.0.1:8080/"
-bindip     = "127.0.0.1"
-port       = 8080
+bind_addr = '127.0.0.1'
+bind_port = '8080'
+unix_socket_path = '/var/run/tcp.ac'
+unix_socket_permissions = 420
+use_unix_socket = false
 
-[txt]
-# string: port to listen on for termbin clone
-port       = "9988"
+[logger]
+debug = true
+directory = '.logs'
+nocolor = false
+trace = false
+use_date_filename = true
 
-[files]
-data       = "./data/"
-logs	   = "./logs/"
-sizelimit  = 48
+[other]
+delete_key_size = 12
+termbin_listen = '127.0.0.1:9999'
+uid_size = 5
+

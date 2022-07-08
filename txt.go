@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"net"
 	"strings"
 
 	valid "github.com/asaskevich/govalidator"
@@ -11,6 +12,8 @@ import (
 	"golang.org/x/crypto/blake2b"
 
 	termbin "git.tcp.direct/kayos/putxt"
+
+	"git.tcp.direct/tcp.direct/tcp.ac/config"
 )
 
 func init() {
@@ -19,7 +22,6 @@ func init() {
 
 func incoming() {
 	var msg termbin.Message
-
 	select {
 	case msg = <-termbin.Msg:
 		switch msg.Type {
@@ -74,31 +76,31 @@ func termPost(b []byte) {
 	}
 
 	// generate new uid and delete key
-	uid := gouid.String(uidSize, gouid.MixedCaseAlphaNum)
-	key := gouid.String(keySize, gouid.MixedCaseAlphaNum)
+	uid := gouid.String(config.UIDSize, gouid.MixedCaseAlphaNum)
+	key := gouid.String(config.DeleteKeySize, gouid.MixedCaseAlphaNum)
 
 	// lets make sure that we don't clash even though its highly unlikely
 	for uidRef, _ := db.With("txt").Get([]byte(uid)); uidRef != nil; {
 		slog.Info().Msg(" uid already exists! generating new...")
-		uid = gouid.String(uidSize, gouid.MixedCaseAlphaNum)
+		uid = gouid.String(config.UIDSize, gouid.MixedCaseAlphaNum)
 	}
 	for keyRef, _ := db.With("key").Get([]byte(key)); keyRef != nil; {
 		slog.Info().Msg(" delete key already exists! generating new...")
-		key = gouid.String(keySize, gouid.MixedCaseAlphaNum)
+		key = gouid.String(config.DeleteKeySize, gouid.MixedCaseAlphaNum)
 	}
 
 	db.With("hsh").Put(hash, []byte(uid))
 
-	uid = gouid.String(uidSize, gouid.MixedCaseAlphaNum)
-	key = gouid.String(keySize, gouid.MixedCaseAlphaNum)
+	uid = gouid.String(config.UIDSize, gouid.MixedCaseAlphaNum)
+	key = gouid.String(config.DeleteKeySize, gouid.MixedCaseAlphaNum)
 
 	for uidRef, _ := db.With("txt").Get([]byte(uid)); uidRef != nil; {
 		slog.Info().Msg(" uid already exists! generating new...")
-		uid = gouid.String(uidSize, gouid.MixedCaseAlphaNum)
+		uid = gouid.String(config.UIDSize, gouid.MixedCaseAlphaNum)
 	}
 	for keyRef, _ := db.With("key").Get([]byte(key)); keyRef != nil; {
 		slog.Info().Msg(" delete key already exists! generating new...")
-		key = gouid.String(keySize, gouid.MixedCaseAlphaNum)
+		key = gouid.String(config.DeleteKeySize, gouid.MixedCaseAlphaNum)
 	}
 
 	db.With("hsh").Put([]byte(hash), []byte(uid))
@@ -129,7 +131,7 @@ func termPost(b []byte) {
 }
 
 func txtView(c *gin.Context) {
-	raddr, _ := c.RemoteIP()
+	raddr := net.ParseIP(c.RemoteIP())
 	if termbin.Rater.Check(&termbin.Identity{Actual: raddr}) {
 		errThrow(c, 429, errors.New("ratelimitted"), "too many requests")
 		return
@@ -148,7 +150,7 @@ func txtView(c *gin.Context) {
 	}
 
 	// if it doesn't match the key size or it isn't alphanumeric - throw it out
-	if !valid.IsAlphanumeric(rUid) || len(rUid) != uidSize {
+	if !valid.IsAlphanumeric(rUid) || len(rUid) != config.UIDSize {
 		errThrow(c, 400, errors.New("request discarded as invalid"), "400")
 		return
 	}
@@ -218,7 +220,8 @@ func serveTermbin() {
 			incoming()
 		}
 	}()
-	err := termbin.Listen("", txtPort)
+	split := strings.Split(config.TermbinListen, ":")
+	err := termbin.Listen(split[0], split[1])
 	if err != nil {
 		println(err.Error())
 		return

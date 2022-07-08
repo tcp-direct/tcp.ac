@@ -3,7 +3,6 @@ module git.tcp.direct/tcp.direct/tcp.ac
 go 1.18
 
 require (
-	git.tcp.direct/Mirrors/bitcask-mirror v0.0.0-20220228092422-1ec4297c7e34
 	git.tcp.direct/kayos/putxt v0.0.0-20220707194005-5bc828145cc4
 	git.tcp.direct/tcp.direct/database v0.0.0-20220610180603-058d36edd7f0
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
@@ -19,6 +18,7 @@ require (
 )
 
 require (
+	git.tcp.direct/Mirrors/bitcask-mirror v0.0.0-20220228092422-1ec4297c7e34 // indirect
 	github.com/abcum/lcp v0.0.0-20201209214815-7a3f3840be81 // indirect
 	github.com/dsoprea/go-exif v0.0.0-20190901173045-3ce78807c90f // indirect
 	github.com/dsoprea/go-jpeg-image-structure v0.0.0-20190422055009-d6f9ba25cf48 // indirect

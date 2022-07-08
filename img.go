@@ -17,6 +17,8 @@ import (
 	exifremove "github.com/scottleedavis/go-exif-remove"
 	"github.com/twharmon/gouid"
 	"golang.org/x/crypto/blake2b"
+
+	"git.tcp.direct/tcp.direct/tcp.ac/config"
 )
 
 var fExt string
@@ -89,7 +91,7 @@ func imgView(c *gin.Context) {
 	}
 
 	// if it doesn't match the key size or it isn't alphanumeric - throw it out
-	if !valid.IsAlphanumeric(rUid) || len(rUid) != uidSize {
+	if !valid.IsAlphanumeric(rUid) || len(rUid) != config.UIDSize {
 		slog.Warn().
 			Str("remoteaddr", c.ClientIP()).
 			Msg("request discarded as invalid")
@@ -135,17 +137,17 @@ func imgView(c *gin.Context) {
 func newUIDandKey() (uid string, key string) {
 	slog := log.With().Str("caller", "newUIDandKey").Logger()
 	// generate new uid and delete key
-	uid = gouid.String(uidSize, gouid.MixedCaseAlphaNum)
-	key = gouid.String(keySize, gouid.MixedCaseAlphaNum)
+	uid = gouid.String(config.UIDSize, gouid.MixedCaseAlphaNum)
+	key = gouid.String(config.DeleteKeySize, gouid.MixedCaseAlphaNum)
 
 	// lets make sure that we don't clash even though its highly unlikely
 	for db.With("img").Has([]byte(uid)) {
 		slog.Warn().Msg(" uid already exists! generating new...")
-		uid = gouid.String(uidSize, gouid.MixedCaseAlphaNum)
+		uid = gouid.String(config.UIDSize, gouid.MixedCaseAlphaNum)
 	}
 	for db.With("key").Has([]byte(key)) {
 		slog.Warn().Msg(" delete key already exists! generating new...")
-		key = gouid.String(keySize, gouid.MixedCaseAlphaNum)
+		key = gouid.String(config.DeleteKeySize, gouid.MixedCaseAlphaNum)
 	}
 	return
 }

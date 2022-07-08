@@ -5,6 +5,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
+	"git.tcp.direct/tcp.direct/tcp.ac/config"
 )
 
 type EntryType uint8
@@ -75,7 +77,7 @@ func (p *Post) Log(l zerolog.Logger) *zerolog.Logger {
 
 func validateKey(rKey string) bool {
 	// if it doesn't match the key size or it isn't alphanumeric - throw it out
-	if len(rKey) != keySize || !valid.IsAlphanumeric(rKey) {
+	if len(rKey) != config.DeleteKeySize || !valid.IsAlphanumeric(rKey) {
 		log.Warn().Str("rKey", rKey).
 			Msg("delete request failed sanity check!")
 		return false
@@ -85,9 +87,9 @@ func validateKey(rKey string) bool {
 
 func (p *Post) URLString() string {
 	var keyurl string = ""
-	url := baseURL + p.TypeCode() + "/" + string(p.UID())
+	url := config.BaseURL + p.TypeCode() + "/" + string(p.UID())
 	if p.DelKey() != "" {
-		keyurl = baseURL + "d/" + p.TypeCode() + "/" + p.DelKey()
+		keyurl = config.BaseURL + "d/" + p.TypeCode() + "/" + p.DelKey()
 	}
 
 	p.Log(log.Logger).Info().Msg("success")
@@ -100,9 +102,9 @@ func (p *Post) URLString() string {
 
 func (p *Post) Serve(c *gin.Context) {
 	var keyurl string = ""
-	url := baseURL + p.TypeCode() + "/" + string(p.UID())
+	url := config.BaseURL + p.TypeCode() + "/" + string(p.UID())
 	if p.DelKey() != "" {
-		keyurl = baseURL + "d/" + p.TypeCode() + "/" + p.DelKey()
+		keyurl = config.BaseURL + "d/" + p.TypeCode() + "/" + p.DelKey()
 	}
 
 	log.Info().

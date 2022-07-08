@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strconv"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
@@ -20,20 +19,24 @@ const (
 
 var (
 	// Version roughly represents the applications current version.
-	Version = runtime.
+	Version = "asdf"
 )
 
 var (
-	BaseURL, WebPort, WebIP, DBDir, LogDir, TxtPort string
-	UIDSize, KeySize, MaxSize                       int
+	BaseURL, HTTPPort, HTTPBind, DBDir, LogDir,
+	TermbinListen, UnixSocketPath string
+	UIDSize, DeleteKeySize, KVMaxKeySizeMB,
+	KVMaxValueSizeMB int
+	UnixSocketPermissions uint32
+	UseUnixSocket         bool
 )
 
 var usage = []string{
 	"\n" + Title + " v" + Version + " Usage\n",
-	"-c <config.toml> - Specify config file",
+	"-c <toml> - Specify config file",
 	"--nocolor - disable color and banner ",
 	"--banner - show banner + version and exit",
-	"--genconfig - write default config to 'config.toml' then exit",
+	"--genconfig - write default config to 'toml' then exit",
 }
 
 func printUsage() {
@@ -42,8 +45,14 @@ func printUsage() {
 }
 
 var (
-	forceDebug = false
-	forceTrace = false
+	forceDebug         = false
+	forceTrace         = false
+	genConfig          = false
+	noColorForce       = false
+	customconfig       = false
+	home               string
+	prefConfigLocation string
+	snek               *viper.Viper
 )
 
 // TODO: should probably just make a proper CLI with flags or something
@@ -53,34 +62,22 @@ func argParse() {
 		case "-h":
 			printUsage()
 		case "--genconfig":
-			GenConfig = true
+			genConfig = true
 		case "--debug", "-v":
 			forceDebug = true
 		case "--trace", "-vv":
 			forceTrace = true
 		case "--nocolor":
 			noColorForce = true
-		case "--banner":
-			BannerOnly = true
 		case "-c", "--config":
 			if len(os.Args) <= i-1 {
 				panic("syntax error! expected file after -c")
 			}
-			loadCustomConfig(os.Args[i+1])
 		default:
 			continue
 		}
 	}
 }
-
-// generic vars
-var (
-	noColorForce       = false
-	customconfig       = false
-	home               string
-	prefConfigLocation string
-	snek               *viper.Viper
-)
 
 // exported generic vars
 var (
@@ -91,11 +88,6 @@ var (
 	// Filename returns the current location of our toml config file.
 	Filename string
 )
-
-func init() {
-	prefConfigLocation = home + "/.config/" + Title
-	snek = viper.New()
-}
 
 func writeConfig() {
 	var err error
@@ -119,7 +111,7 @@ func writeConfig() {
 		}
 	}
 
-	newconfig := prefConfigLocation + "/" + "config.toml"
+	newconfig := prefConfigLocation + "/" + "toml"
 	if err = snek.SafeWriteConfigAs(newconfig); err != nil {
 		fmt.Println("Failed to write new configuration file: " + err.Error())
 		os.Exit(1)
@@ -130,10 +122,18 @@ func writeConfig() {
 
 // Init will initialize our toml configuration engine and define our default configuration values which can be written to a new configuration file if desired
 func Init() {
+	argParse()
+	prefConfigLocation = home + "/.config/" + Title
+	snek = viper.New()
+
+	if genConfig {
+		setDefaults()
+		println("config file generated at: " + Filename)
+		os.Exit(0)
+	}
+
 	snek.SetConfigType("toml")
 	snek.SetConfigName("config")
-
-	argParse()
 
 	if customconfig {
 		associateExportedVariables()
@@ -146,7 +146,7 @@ func Init() {
 		snek.AddConfigPath(loc)
 	}
 
-	if err = snek.MergeInConfig(); err != nil {
+	if err := snek.MergeInConfig(); err != nil {
 		println("Error reading configuration file: " + err.Error())
 		println("Writing new configuration file...")
 		writeConfig()
@@ -171,7 +171,8 @@ func getConfigPaths() (paths []string) {
 
 func loadCustomConfig(path string) {
 	/* #nosec */
-	if f, err = os.Open(path); err != nil {
+	f, err := os.Open(path)
+	if err != nil {
 		println("Error opening specified config file: " + path)
 		println(err.Error())
 		os.Exit(1)
@@ -212,33 +213,32 @@ func processOpts() {
 	stringOpt := map[string]*string{
 		"http.bind_addr":        &HTTPBind,
 		"http.bind_port":        &HTTPPort,
+		"http.unix_socket_path": &UnixSocketPath,
 		"logger.directory":      &LogDir,
-		"deception.server_name": &FakeServerName,
+		"other.termbin_listen":  &TermbinListen,
 	}
-	// string slice options and their exported variables
-	strSliceOpt := map[string]*[]string{
-		"http.router.paths": &Paths,
-	}
+
 	// bool options and their exported variables
 	boolOpt := map[string]*bool{
-		"performance.restrict_concurrency": &RestrictConcurrency,
-		"http.use_unix_socket":             &UseUnixSocket,
-		"logger.debug":                     &Debug,
-		"logger.trace":                     &Trace,
-		"logger.nocolor":                   &NoColor,
-		"http.router.makerobots":           &MakeRobots,
-		"http.router.catchall":             &CatchAll,
+		"http.use_unix_socket": &UseUnixSocket,
+		"logger.debug":         &Debug,
+		"logger.trace":         &Trace,
+		"logger.nocolor":       &noColorForce,
 	}
+
 	// integer options and their exported variables
 	intOpt := map[string]*int{
-		"performance.max_workers": &MaxWorkers,
+		"data.max_key_size":   &KVMaxKeySizeMB,
+		"data.max_value_size": &KVMaxValueSizeMB,
+		"other.uid_size":      &UIDSize,
+	}
+
+	uint32Opt := map[string]*uint32{
+		"http.unix_socket_permissions": &UnixSocketPermissions,
 	}
 
 	for key, opt := range stringOpt {
 		*opt = snek.GetString(key)
-	}
-	for key, opt := range strSliceOpt {
-		*opt = snek.GetStringSlice(key)
 	}
 	for key, opt := range boolOpt {
 		*opt = snek.GetBool(key)
@@ -246,25 +246,14 @@ func processOpts() {
 	for key, opt := range intOpt {
 		*opt = snek.GetInt(key)
 	}
+	for key, opt := range uint32Opt {
+		*opt = snek.GetUint32(key)
+	}
 }
 
 func associateExportedVariables() {
 	processOpts()
-
-	if noColorForce {
-		NoColor = true
-	}
-
-	if UseUnixSocket {
-		UnixSocketPath = snek.GetString("http.unix_socket_path")
-		parsedPermissions, err := strconv.ParseUint(snek.GetString("http.unix_socket_permissions"), 8, 32)
-		if err == nil {
-			UnixSocketPermissions = uint32(parsedPermissions)
-		}
-	}
-
 	// We set exported variables here so that it tracks when accessed from other packages.
-
 	if Debug || forceDebug {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		Debug = true

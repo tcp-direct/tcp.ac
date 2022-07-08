@@ -6,64 +6,40 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/gin-gonic/gin"
 	"github.com/muesli/termenv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
+	"git.tcp.direct/tcp.direct/tcp.ac/config"
 )
 
 var Banner string = "CiAgLGQgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogIDg4ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKTU04OE1NTSAsYWRQUFliYSwgOGIsZFBQWWJhLCAgICAgICxhZFBQWVliYSwgICxhZFBQWWJhLCAgCiAgODggICBhOCIgICAgICIiIDg4UCcgICAgIjhhICAgICAiIiAgICAgYFk4IGE4IiAgICAgIiIgIAogIDg4ICAgOGIgICAgICAgICA4OCAgICAgICBkOCAgICAgLGFkUFBQUFA4OCA4YiAgICAgICAgICAKICA4OCwgICI4YSwgICAsYWEgODhiLCAgICxhOCIgODg4IDg4LCAgICAsODggIjhhLCAgICxhYSAgCiAgIlk4ODggYCJZYmJkOCInIDg4YFliYmRQIicgIDg4OCBgIjhiYmRQIlk4ICBgIlliYmQ4IicgIAogICAgICAgICAgICAgICAgICA4OCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgODggICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCg=="
 
-func init() {
+func makeDirectories() {
+	log.Trace().Msgf("establishing log directory presence at %s...", config.LogDir)
+	err := os.MkdirAll(config.LogDir, 0o644)
+	if err != nil {
+		log.Fatal().
+			Str("directory", config.LogDir).
+			Err(err).Msg("failed to open log directory")
+		return
+	}
+
+	log.Trace().Msgf("establishing data directory presence at %s...", config.DBDir)
+	err = os.MkdirAll(config.DBDir, 0o644)
+	if err != nil {
+		log.Fatal().
+			Str("directory", config.DBDir).
+			Err(err).Msg("failed to open directory")
+		return
+	}
+}
+
+func printBanner() {
 	out := termenv.String(b64d(Banner))
 	p := termenv.ColorProfile()
 	out = out.Foreground(p.Color("#948DB8"))
-
 	fmt.Println(out)
-
-	// initialize the logger before the config: that way we can output debug lines
-	// pertaining to the parsing of the configuration init
-
-	// ////////// init logging ////////////
-
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-	log.Info().Msg("Initializing...")
-
-	// see config.go
-	configRead()
-
-	if !debugBool {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
-	// now that we know where to put the log file, we can start output (replace logger)
-
-	err := os.MkdirAll(logDir, 0o755)
-	if err != nil {
-		log.Fatal().Str("directory", logDir).Str("intent", "logDir").Err(err).Msg("failed to open directory")
-		return
-	}
-
-	err = os.MkdirAll(dbDir, 0o755)
-	if err != nil {
-		log.Fatal().Str("directory", dbDir).Str("intent", "dbDir").Err(err).Msg("failed to open directory")
-		return
-	}
-
-	lf, err := os.OpenFile(logDir+"tcpac.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o666)
-	if err != nil {
-		log.Fatal().Str("logDir", logDir).Err(err).Msg("Error opening log file!")
-	}
-
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-	multi := zerolog.MultiLevelWriter(consoleWriter, lf)
-	log.Logger = zerolog.New(multi).With().Timestamp().Logger()
-	err = dbInit()
-	if err != nil {
-		log.Fatal().Err(err).Msg("bitcask failure")
-	}
 }
 
 func catchSignal() {
@@ -83,9 +59,27 @@ func catchSignal() {
 }
 
 func main() {
+	printBanner()
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}
+	log.Logger = log.Output(consoleWriter).With().Timestamp().Logger()
+	log.Info().Msg("Initializing...")
+	config.Init()
+	makeDirectories()
+	log.Debug().Msg("debug enabled")
+	log.Trace().Msg("trace enabled")
+	lf, err := os.OpenFile(config.LogDir+"tcpac.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o666)
+	if err != nil {
+		log.Fatal().Str("config.LogDir", config.LogDir).Err(err).Msg("Error opening log file!")
+	}
+	multi := zerolog.MultiLevelWriter(consoleWriter, lf)
+	log.Logger = zerolog.New(multi).With().Timestamp().Logger()
+	err = dbInit()
+	if err != nil {
+		log.Fatal().Err(err).Msg("bitcask failure")
+	}
 	defer db.SyncAndCloseAll()
-	go catchSignal()
 	go serveTermbin()
-	// see router.go
-	httpRouter()
+	go httpRouter()
+	catchSignal()
 }
