@@ -1,5 +1,7 @@
 .data
 .logs
 .idea
-logs
-data
+logs/
+data/
+*.toml
+*.log

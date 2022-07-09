@@ -12,6 +12,7 @@ require (
 	github.com/muesli/termenv v0.12.0
 	github.com/rs/zerolog v1.27.0
 	github.com/scottleedavis/go-exif-remove v0.0.0-20190908021517-58bdbaac8636
+	github.com/spf13/afero v1.8.2
 	github.com/spf13/viper v1.12.0
 	github.com/twharmon/gouid v0.5.2
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
@@ -50,7 +51,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/plar/go-adaptive-radix-tree v1.0.4 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
-	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect

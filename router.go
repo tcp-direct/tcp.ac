@@ -31,8 +31,9 @@ func urlPost(c *gin.Context) {
 	return
 }
 
-func httpRouter() {
-	if !config.Debug {
+func httpRouter() *gin.Engine {
+	if !config.Trace {
+		log.Debug().Caller().Msg("running gin in release mode, enable trace to run gin in debug mode")
 		gin.SetMode(gin.ReleaseMode)
 	}
 
@@ -84,5 +85,7 @@ func httpRouter() {
 	log.Info().Str("Host", config.HTTPBind).
 		Str("Port", config.HTTPPort).
 		Msg("done; tcp.ac is live.")
-	router.Run(config.HTTPBind + ":" + config.HTTPPort)
+	go router.Run(config.HTTPBind + ":" + config.HTTPPort)
+
+	return router
 }

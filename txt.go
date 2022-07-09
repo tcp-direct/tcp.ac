@@ -26,12 +26,12 @@ func incoming() {
 	case msg = <-termbin.Msg:
 		switch msg.Type {
 		case termbin.Error:
-			log.Error().
+			log.Warn().
 				Str("RemoteAddr", msg.RAddr).
 				Int("Size", msg.Size).
 				Msg(msg.Content)
 		case termbin.IncomingData:
-			log.Debug().
+			log.Trace().
 				Str("RemoteAddr", msg.RAddr).
 				Int("Size", msg.Size).
 				Msg("termbin_data")
@@ -41,12 +41,12 @@ func incoming() {
 				Int("Size", msg.Size).
 				Msg(msg.Content)
 		case termbin.Debug:
-			log.Debug().
+			log.Trace().
 				Str("RemoteAddr", msg.RAddr).
 				Int("Size", msg.Size).
 				Msg(msg.Content)
 		case termbin.Final:
-			log.Debug().
+			log.Trace().
 				Str("RemoteAddr", msg.RAddr).
 				Int("Size", msg.Size).
 				Msg(msg.Content)

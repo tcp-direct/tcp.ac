@@ -64,7 +64,7 @@ func imgDel(c *gin.Context) {
 	}
 
 	slog.Info().Str("rkey", finalTarget[1]).Msg("Image file deleted successfully")
-	slog.Debug().Str("rkey", finalTarget[1]).Msg("Removing delete key entry")
+	slog.Trace().Str("rkey", finalTarget[1]).Msg("Removing delete key entry")
 	err = db.With("key").Delete([]byte(rKey))
 	if err != nil {
 		slog.Error().Str("rkey", finalTarget[1]).Msg("Couldn't delete key")
@@ -76,12 +76,12 @@ func imgDel(c *gin.Context) {
 
 func imgView(c *gin.Context) {
 	slog := log.With().Str("caller", "imgView").Logger()
-	sUid := strings.Split(c.Param("uid"), ".")
-	rUid := sUid[0]
+	sUID := strings.Split(c.Param("uid"), ".")
+	rUID := sUID[0]
 
-	if len(sUid) > 1 {
-		fExt = strings.ToLower(sUid[1])
-		slog.Debug().Str("ext", fExt).Msg("detected file extension")
+	if len(sUID) > 1 {
+		fExt = strings.ToLower(sUID[1])
+		slog.Trace().Str("ext", fExt).Msg("detected file extension")
 		if fExt != "png" && fExt != "jpg" && fExt != "jpeg" && fExt != "gif" {
 			errThrow(c, 400, errors.New("bad file extension"), "invalid request")
 			return
@@ -91,7 +91,7 @@ func imgView(c *gin.Context) {
 	}
 
 	// if it doesn't match the key size or it isn't alphanumeric - throw it out
-	if !valid.IsAlphanumeric(rUid) || len(rUid) != config.UIDSize {
+	if !valid.IsAlphanumeric(rUID) || len(rUID) != config.UIDSize {
 		slog.Warn().
 			Str("remoteaddr", c.ClientIP()).
 			Msg("request discarded as invalid")
@@ -101,12 +101,12 @@ func imgView(c *gin.Context) {
 	}
 
 	// now that we think its a valid request we will query
-	slog.Debug().Str("rUid", rUid).Msg("request validated")
+	slog.Trace().Str("rUid", rUID).Msg("request validated")
 
 	// query bitcask for the id
-	fBytes, _ := db.With("img").Get([]byte(rUid))
+	fBytes, _ := db.With("img").Get([]byte(rUID))
 	if fBytes == nil {
-		slog.Error().Str("rUid", rUid).Msg("no corresponding file for this id")
+		slog.Error().Str("rUid", rUID).Msg("no corresponding file for this id")
 		errThrow(c, 404, errors.New("entry not found"), "File not found")
 		return
 	}
@@ -131,7 +131,7 @@ func imgView(c *gin.Context) {
 	contentType := "image/" + imageFormat
 	c.Data(200, contentType, fBytes)
 
-	slog.Info().Str("rUid", rUid).Msg("Successful upload")
+	slog.Info().Str("rUid", rUID).Msg("Successful upload")
 }
 
 func newUIDandKey() (uid string, key string) {
@@ -223,7 +223,7 @@ func imgPost(c *gin.Context) {
 			return
 		}
 
-		slog.Debug().Msg("duplicate checksum in hash database, checking if file still exists...")
+		slog.Trace().Caller().Msg("duplicate checksum in hash database, checking if file still exists...")
 
 		if db.With("img").Has(imgRef) {
 			slog.Debug().Str("ogUid", string(imgRef)).Msg("duplicate file found! returning original URL")
@@ -232,7 +232,7 @@ func imgPost(c *gin.Context) {
 			return
 		}
 
-		slog.Debug().
+		slog.Trace().
 			Str("ogUid", string(imgRef)).
 			Msg("stale hash found, deleting entry...")
 
@@ -245,15 +245,15 @@ func imgPost(c *gin.Context) {
 	uid, key := newUIDandKey()
 
 	// save checksum to db to prevent dupes in the future
-	err = db.With("hsh").Put([]byte(hash), []byte(uid))
+	err = db.With("hsh").Put(hash, []byte(uid))
 	if err != nil {
 		errThrow(c, 500, err, "upload failed")
 		return
 	}
 
 	// insert actual file to database
-	slog.Debug().Str("uid", uid).Msg("saving file to database")
-	err = db.With("img").Put([]byte(uid), []byte(scrubbed))
+	slog.Trace().Str("uid", uid).Msg("saving file to database")
+	err = db.With("img").Put([]byte(uid), scrubbed)
 	if err != nil {
 		errThrow(c, 500, err, "upload failed")
 		return
@@ -268,7 +268,7 @@ func imgPost(c *gin.Context) {
 	}
 
 	// good to go, send them to the finisher function
-	slog.Debug().Str("uid", uid).Msg("saved to database successfully, sending to Serve")
+	slog.Trace().Str("uid", uid).Msg("saved to database successfully, sending to Serve")
 
 	post := &Post{
 		entryType: Image,

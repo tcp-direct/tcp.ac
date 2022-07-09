@@ -7,8 +7,11 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
+	"sync"
 
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
@@ -19,7 +22,7 @@ const (
 
 var (
 	// Version roughly represents the applications current version.
-	Version = "asdf"
+	Version = "0.0.0"
 )
 
 var (
@@ -31,13 +34,17 @@ var (
 	UseUnixSocket         bool
 )
 
-var usage = []string{
-	"\n" + Title + " v" + Version + " Usage\n",
-	"-c <toml> - Specify config file",
-	"--nocolor - disable color and banner ",
-	"--banner - show banner + version and exit",
-	"--genconfig - write default config to 'toml' then exit",
-}
+var usage = fmt.Sprintf(`
+          %s v%s
+
+        brought to you by:
+        --> tcp.direct <--
+
+-c <file>		Specify config file
+--nocolor		disable color and banner
+--banner		show banner + version and exit
+--genconfig		write default config to 'config.toml' then exit
+`, Title, Version)
 
 func printUsage() {
 	println(usage)
@@ -93,7 +100,7 @@ func writeConfig() {
 	var err error
 	//goland:noinspection GoBoolExpressions
 	if runtime.GOOS == "windows" {
-		newconfig := "hellpot-config"
+		newconfig := Title
 		snek.SetConfigName(newconfig)
 		if err = snek.MergeInConfig(); err != nil {
 			if err = snek.SafeWriteConfigAs(newconfig + ".toml"); err != nil {
@@ -101,34 +108,60 @@ func writeConfig() {
 				os.Exit(1)
 			}
 		}
+		Filename = newconfig + ".toml"
 		return
 	}
 
 	if _, err := os.Stat(prefConfigLocation); os.IsNotExist(err) {
-		if err = os.MkdirAll(prefConfigLocation, 0o750); err != nil {
+		if err = os.MkdirAll(prefConfigLocation, 0o740); err != nil {
 			println("error writing new config: " + err.Error())
 			os.Exit(1)
 		}
 	}
 
-	newconfig := prefConfigLocation + "/" + "toml"
+	newconfig := prefConfigLocation + "config.toml"
 	if err = snek.SafeWriteConfigAs(newconfig); err != nil {
-		fmt.Println("Failed to write new configuration file: " + err.Error())
-		os.Exit(1)
+		log.Fatal().Caller().Err(err).Str("target", newconfig).Msg("failed to write new configuration file")
 	}
 
 	Filename = newconfig
 }
 
+func init() {
+	var err error
+	home, err = os.UserHomeDir()
+	if err != nil {
+		println(err.Error())
+		os.Exit(1)
+	}
+	initDefaults()
+}
+
+var once = &sync.Once{}
+
+func substantiateLogger() {
+	once.Do(func() {
+		consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}
+		lf, err := os.OpenFile(LogDir+"tcpac.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o666)
+		if err != nil {
+			log.Fatal().Str("config.LogDir", LogDir).Err(err).Msg("Error opening log file!")
+		}
+		multi := zerolog.MultiLevelWriter(consoleWriter, lf)
+		log.Logger = zerolog.New(multi).With().Timestamp().Logger()
+	})
+}
+
 // Init will initialize our toml configuration engine and define our default configuration values which can be written to a new configuration file if desired
 func Init() {
 	argParse()
-	prefConfigLocation = home + "/.config/" + Title
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	consoleWriter := zerolog.ConsoleWriter{Out: os.Stdout}
+	log.Logger = log.Output(consoleWriter).With().Timestamp().Logger()
+	prefConfigLocation = home + "/.config/" + Title + "/"
 	snek = viper.New()
 
 	if genConfig {
 		setDefaults()
-		println("config file generated at: " + Filename)
 		os.Exit(0)
 	}
 
@@ -137,6 +170,7 @@ func Init() {
 
 	if customconfig {
 		associateExportedVariables()
+		substantiateLogger()
 		return
 	}
 
@@ -147,8 +181,8 @@ func Init() {
 	}
 
 	if err := snek.MergeInConfig(); err != nil {
-		println("Error reading configuration file: " + err.Error())
-		println("Writing new configuration file...")
+		substantiateLogger()
+		log.Warn().Err(err).Msg("failed to read configuration file")
 		writeConfig()
 	}
 
@@ -156,6 +190,7 @@ func Init() {
 		Filename = snek.ConfigFileUsed()
 	}
 
+	substantiateLogger()
 	associateExportedVariables()
 }
 
@@ -196,11 +231,9 @@ func loadCustomConfig(path string) {
 
 	switch {
 	case err1 != nil:
-		fmt.Println("config file read fatal error during i/o: ", err1.Error())
-		os.Exit(1)
+		log.Fatal().Err(err1).Msg("config file read fatal error during i/o")
 	case err2 != nil:
-		fmt.Println("config file read fatal error during parse: ", err2.Error())
-		os.Exit(1)
+		log.Fatal().Err(err2).Msg("config file read fatal error during parsing")
 	default:
 		break
 	}
@@ -214,8 +247,14 @@ func processOpts() {
 		"http.bind_addr":        &HTTPBind,
 		"http.bind_port":        &HTTPPort,
 		"http.unix_socket_path": &UnixSocketPath,
+		"data.directory":        &DBDir,
 		"logger.directory":      &LogDir,
 		"other.termbin_listen":  &TermbinListen,
+		"other.base_url":        &BaseURL,
+	}
+
+	if !strings.HasSuffix(BaseURL, "/") {
+		BaseURL += "/"
 	}
 
 	// bool options and their exported variables
@@ -228,9 +267,10 @@ func processOpts() {
 
 	// integer options and their exported variables
 	intOpt := map[string]*int{
-		"data.max_key_size":   &KVMaxKeySizeMB,
-		"data.max_value_size": &KVMaxValueSizeMB,
-		"other.uid_size":      &UIDSize,
+		"data.max_key_size":     &KVMaxKeySizeMB,
+		"data.max_value_size":   &KVMaxValueSizeMB,
+		"other.uid_size":        &UIDSize,
+		"other.delete_key_size": &DeleteKeySize,
 	}
 
 	uint32Opt := map[string]*uint32{
