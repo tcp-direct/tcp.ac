@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/rs/zerolog/log"
 
@@ -30,13 +33,19 @@ func makeDirectories() {
 	}
 }
 
-func wait() {
+func wait(hs *http.Server) {
 	c := make(chan os.Signal, 5)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	for {
 		select {
 		case <-c:
 			log.Warn().Msg("Interrupt detected, shutting down gracefully...")
+			if err := hs.Shutdown(ctx); err != nil {
+				cancel()
+			}
+			log.Print("fin.")
+			cancel()
 			return
 		}
 	}
@@ -59,5 +68,5 @@ func main() {
 		}
 	}()
 	go serveTermbin()
-	wait()
+	wait(httpRouter())
 }

@@ -14,10 +14,19 @@ func PrintBanner() {
 		println("tcp.ac\n")
 		return
 	}
+	gitr := ""
+	brn := ""
+	if gitrev, ok := binInfo["vcs.revision"]; ok {
+		gitr = gitrev[:7]
+	}
+	if vt, ok := binInfo["vcs.time"]; ok {
+		brn = vt
+	}
+
 	p := termenv.ColorProfile()
 	bnr, _ := squish.UnpackStr(Banner)
-	gr := termenv.String(binInfo["vcs.revision"][:7]).Foreground(termenv.ANSIBrightGreen).String()
-	born := termenv.String(binInfo["vcs.time"]).Foreground(p.Color("#1e9575")).String()
+	gr := termenv.String(gitr).Foreground(termenv.ANSIBrightGreen).String()
+	born := termenv.String(brn).Foreground(p.Color("#1e9575")).String()
 	out := strings.Replace(bnr, "$gitrev$", gr, 1)
 	out = strings.Replace(out, "$date$", born, 1)
 	cout := termenv.String(out)

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"io"
+	"net/http"
 	"time"
 
 	"github.com/gin-contrib/gzip"
@@ -31,7 +32,7 @@ func urlPost(c *gin.Context) {
 	return
 }
 
-func httpRouter() *gin.Engine {
+func httpRouter() *http.Server {
 	if !config.Trace {
 		log.Debug().Caller().Msg("running gin in release mode, enable trace to run gin in debug mode")
 		gin.SetMode(gin.ReleaseMode)
@@ -85,7 +86,13 @@ func httpRouter() *gin.Engine {
 	log.Info().Str("Host", config.HTTPBind).
 		Str("Port", config.HTTPPort).
 		Msg("done; tcp.ac is live.")
-	go router.Run(config.HTTPBind + ":" + config.HTTPPort)
 
-	return router
+	srv := &http.Server{
+		Addr:    config.HTTPBind + ":" + config.HTTPPort,
+		Handler: router,
+	}
+
+	go srv.ListenAndServe()
+
+	return srv
 }
