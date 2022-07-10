@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"sync"
 
@@ -20,10 +21,28 @@ const (
 	Title = "tcp.ac"
 )
 
-var (
-	// Version roughly represents the applications current version.
-	Version = "0.0.0"
-)
+var binInfo map[string]string
+
+func init() {
+	binInfo = make(map[string]string)
+
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return
+	}
+
+	for _, v := range info.Settings {
+		binInfo[v.Key] = v.Value
+	}
+
+	var err error
+	home, err = os.UserHomeDir()
+	if err != nil {
+		println(err.Error())
+		os.Exit(1)
+	}
+	initDefaults()
+}
 
 var (
 	BaseURL, HTTPPort, HTTPBind, DBDir, LogDir,
@@ -35,16 +54,16 @@ var (
 )
 
 var usage = fmt.Sprintf(`
-          %s v%s
+               %s
 
         brought to you by:
         --> tcp.direct <--
 
--c <file>		Specify config file
---nocolor		disable color and banner
---banner		show banner + version and exit
---genconfig		write default config to 'config.toml' then exit
-`, Title, Version)
+--config <file>		Specify custom config file
+--nocolor		Disable color and banner
+--genconfig		Write default config to stdout and exit
+--version		Show version info and exit
+`, Title)
 
 func printUsage() {
 	println(usage)
@@ -76,6 +95,9 @@ func argParse() {
 			forceTrace = true
 		case "--nocolor":
 			noColorForce = true
+		case "--version":
+			PrintBanner()
+			os.Exit(0)
 		case "-c", "--config":
 			if len(os.Args) <= i-1 {
 				panic("syntax error! expected file after -c")
@@ -128,13 +150,7 @@ func writeConfig() {
 }
 
 func init() {
-	var err error
-	home, err = os.UserHomeDir()
-	if err != nil {
-		println(err.Error())
-		os.Exit(1)
-	}
-	initDefaults()
+
 }
 
 var once = &sync.Once{}

@@ -5,3 +5,5 @@ logs/
 data/
 *.toml
 *.log
+*.art
+tcp.ac

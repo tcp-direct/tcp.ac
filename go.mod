@@ -3,6 +3,7 @@ module git.tcp.direct/tcp.direct/tcp.ac
 go 1.18
 
 require (
+	git.tcp.direct/kayos/common v0.5.2
 	git.tcp.direct/kayos/putxt v0.0.0-20220707194005-5bc828145cc4
 	git.tcp.direct/tcp.direct/database v0.0.0-20220610180603-058d36edd7f0
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
