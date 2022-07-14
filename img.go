@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"errors"
-	"image"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
@@ -11,12 +10,12 @@ import (
 	"net/http"
 	"strings"
 
+	_ "git.tcp.direct/kayos/common"
+	"git.tcp.direct/kayos/common/entropy"
 	valid "github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	exifremove "github.com/scottleedavis/go-exif-remove"
-	"github.com/twharmon/gouid"
-	"golang.org/x/crypto/blake2b"
 
 	"git.tcp.direct/tcp.direct/tcp.ac/config"
 )
@@ -134,22 +133,41 @@ func imgView(c *gin.Context) {
 	slog.Info().Str("rUid", rUID).Msg("Successful upload")
 }
 
-func newUIDandKey() (uid string, key string) {
-	slog := log.With().Str("caller", "newUIDandKey").Logger()
+func instantiateWithIDs(p *Post) *Post {
+	slog := log.With().Str("caller", "instantiateWithIDs").Logger()
 	// generate new uid and delete key
-	uid = gouid.String(config.UIDSize, gouid.MixedCaseAlphaNum)
-	key = gouid.String(config.DeleteKeySize, gouid.MixedCaseAlphaNum)
-
+	p.uid = entropy.RandStrWithUpper(config.UIDSize)
+	p.key = entropy.RandStrWithUpper(config.DeleteKeySize)
 	// lets make sure that we don't clash even though its highly unlikely
-	for db.With("img").Has([]byte(uid)) {
+	for db.With(p.TypeCode(true)).Has([]byte(p.UID())) {
 		slog.Warn().Msg(" uid already exists! generating new...")
-		uid = gouid.String(config.UIDSize, gouid.MixedCaseAlphaNum)
+		p.uid = entropy.RandStrWithUpper(config.UIDSize)
 	}
-	for db.With("key").Has([]byte(key)) {
+	for db.With("key").Has([]byte(p.DelKey())) {
 		slog.Warn().Msg(" delete key already exists! generating new...")
-		key = gouid.String(config.DeleteKeySize, gouid.MixedCaseAlphaNum)
+		p.key = entropy.RandStrWithUpper(config.DeleteKeySize)
 	}
-	return
+	// save checksum to db to prevent dupes in the future
+	err := db.With("hsh").Put(p.Sum(), []byte(p.UID()))
+	if err != nil {
+		return nil
+	}
+	return p
+}
+
+func savePost(p *Post) error {
+	// insert actual file to database
+	p.Log().Trace().Msg("saving file to database")
+	err := db.With(p.TypeCode(true)).Put([]byte(p.UID()), p.Bytes())
+	if err != nil {
+		return err
+	}
+	return db.
+		With("key").
+		Put(
+			[]byte(p.DelKey()),
+			[]byte(p.TypeCode(false)+"."+p.UID()),
+		)
 }
 
 func readAndScrubImage(file io.ReadSeeker) (scrubbed []byte, err error) {
@@ -179,17 +197,16 @@ func readAndScrubImage(file io.ReadSeeker) (scrubbed []byte, err error) {
 	return
 }
 
-func imgPost(c *gin.Context) {
+type validatingScrubber func(c *gin.Context) ([]byte, error)
+
+func imgValidateAndScrub(c *gin.Context) ([]byte, error) {
 	slog := log.With().Str("caller", "imgPost").
 		Str("User-Agent", c.GetHeader("User-Agent")).
 		Str("RemoteAddr", c.ClientIP()).Logger()
-
-	var priv = false
-
 	// check if incoming POST data is invalid
 	f, err := c.FormFile("upload")
 	if err != nil || f == nil {
-		errThrow(c, http.StatusBadRequest, err, "invalid request")
+		return nil, err
 	}
 
 	slog.Debug().Str("filename", f.Filename).Msg("[+] New upload")
@@ -198,110 +215,92 @@ func imgPost(c *gin.Context) {
 	file, err := f.Open()
 	if err != nil {
 		errThrow(c, http.StatusInternalServerError, err, "error processing file\n")
-		return
+		return nil, err
 	}
 
 	scrubbed, err := readAndScrubImage(file)
 	if err != nil {
 		errThrow(c, http.StatusBadRequest, err, "invalid request")
-		return
+		return nil, err
 	}
+	return scrubbed, nil
+}
 
-	Hashr, err := blake2b.New(64, nil)
+func getOldRef(p *Post) (*Post, error) {
+	var oldRef []byte
+	oldRef, err := db.With("hsh").Get(p.Sum())
 	if err != nil {
-		errThrow(c, http.StatusInternalServerError, err, "internal server error")
+		return nil, err
 	}
-	Hashr.Write(scrubbed)
-	hash := Hashr.Sum(nil)
+	p.Log().Trace().Caller().Msg("duplicate checksum in hash database, checking if file still exists...")
+	if db.With(p.TypeCode(true)).Has(oldRef) {
+		p.Log().Debug().Str("ogUid", string(oldRef)).
+			Msg("duplicate file found! returning original URL")
+		p.uid = string(oldRef)
+		p.key = ""
+		p.priv = false
+		return p, nil
+	}
+	p.Log().Trace().
+		Str("ogUid", string(oldRef)).
+		Msg("stale hash found, deleting entry...")
+	err = db.With("hsh").Delete(p.Sum())
+	if err != nil {
+		p.Log().Error().Err(err).Msg("failed to delete stale hash")
+		p = nil
+	}
+	return p, err
+}
+
+func post(c *gin.Context, vas validatingScrubber, t EntryType) error {
+	scrubbed, err := vas(c)
+	if err != nil {
+		if c != nil {
+			return errThrow(c, http.StatusBadRequest, err, "invalid request")
+		}
+		return err
+	}
+	var p *Post
+	switch t {
+	case Image:
+		p = NewImg(scrubbed, false)
+	case Text:
+		p = NewTxt(scrubbed, false)
+	default:
+		return errors.New("invalid entry type")
+	}
 
 	// the keys (stored in memory) for db.With("hsh") are hashes
 	// making it quick to find duplicates. the value is the uid
-	if db.With("hsh").Has(hash) {
-		imgRef, err := db.With("hsh").Get(hash)
+	if db.With("hsh").Has(p.Sum()) {
+		p, err = getOldRef(p)
 		if err != nil {
-			errThrow(c, http.StatusInternalServerError, err, "internal server error")
-			return
-		}
-
-		slog.Trace().Caller().Msg("duplicate checksum in hash database, checking if file still exists...")
-
-		if db.With("img").Has(imgRef) {
-			slog.Debug().Str("ogUid", string(imgRef)).Msg("duplicate file found! returning original URL")
-			post := &Post{entryType: Image, uid: string(imgRef), key: "", priv: false}
-			post.Serve(c)
-			return
-		}
-
-		slog.Trace().
-			Str("ogUid", string(imgRef)).
-			Msg("stale hash found, deleting entry...")
-
-		err = db.With("hsh").Delete(hash)
-		if err != nil {
-			slog.Warn().Err(err).Msg("failed to delete stale hash")
+			if c != nil {
+				return errThrow(c, http.StatusInternalServerError, err, "internal server error")
+			}
+			return err
 		}
 	}
 
-	uid, key := newUIDandKey()
-
-	// save checksum to db to prevent dupes in the future
-	err = db.With("hsh").Put(hash, []byte(uid))
-	if err != nil {
-		errThrow(c, 500, err, "upload failed")
-		return
+	p = instantiateWithIDs(p)
+	if p == nil {
+		if c != nil {
+			return errThrow(c, 500, err, "upload failed")
+		}
+		return err
 	}
 
-	// insert actual file to database
-	slog.Trace().Str("uid", uid).Msg("saving file to database")
-	err = db.With("img").Put([]byte(uid), scrubbed)
+	err = savePost(p)
 	if err != nil {
-		errThrow(c, 500, err, "upload failed")
-		return
-	}
-
-	// add delete key to database with image prefix
-	// there is a whole db for delete keys
-	err = db.With("key").Put([]byte(key), []byte("i."+uid))
-	if err != nil {
-		errThrow(c, http.StatusInternalServerError, err, "internal error")
-		return
+		if c != nil {
+			return errThrow(c, http.StatusInternalServerError, err, "internal error")
+		}
+		return err
 	}
 
 	// good to go, send them to the finisher function
-	slog.Trace().Str("uid", uid).Msg("saved to database successfully, sending to Serve")
+	p.Log().Trace().Msg("saved to database successfully, sending to NewPostResponse")
 
-	post := &Post{
-		entryType: Image,
-		uid:       uid,
-		key:       key,
-		priv:      priv,
-	}
-
-	post.Serve(c)
-
-}
-
-func checkImage(r io.ReadSeeker) (fmt string, err error) {
-	// in theory this makes sure the file is an image via magic bytes
-	_, fmt, err = image.Decode(r)
-	if err != nil {
-		return
-	}
-	_, err = r.Seek(0, 0)
-	return
-}
-
-func getSize(s io.Seeker) (size int64, err error) {
-	// get size of file
-	if _, err = s.Seek(0, 0); err != nil {
-		return
-	}
-
-	// 2 == from the end of the file
-	if size, err = s.Seek(0, 2); err != nil {
-		return
-	}
-
-	_, err = s.Seek(0, 0)
-	return
+	p.NewPostResponse(c)
+	return nil
 }

@@ -51,13 +51,16 @@ func incoming() {
 				Int("Size", msg.Size).
 				Msg(msg.Content)
 
-			termPost(msg.Bytes)
+			termPost(msg)
 		}
 	}
 }
 
-func termPost(b []byte) {
-	slog := log.With().Str("caller", "termPost").Logger()
+func termPost(msg) {
+	slog := log.With().Str("caller", "imgPost").
+		Str("User-Agent", c.GetHeader("User-Agent")).
+		Str("RemoteAddr", c.ClientIP()).Logger()
+
 	Hashr, _ := blake2b.New(64, nil)
 	Hashr.Write(b)
 	hash := Hashr.Sum(nil)
@@ -118,7 +121,7 @@ func termPost(b []byte) {
 		return
 	}
 
-	slog.Debug().Str("uid", uid).Msg("saved to database successfully, sending to Serve")
+	slog.Debug().Str("uid", uid).Msg("saved to database successfully, sending to NewPostResponse")
 
 	post := &Post{
 		entryType: Text,
