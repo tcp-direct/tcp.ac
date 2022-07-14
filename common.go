@@ -73,12 +73,12 @@ func (p *Post) TypeCode(long bool) (code string) {
 	case Image:
 		code = "i"
 		if long {
-			code += "mage"
+			code += "mg"
 		}
 	case Text:
 		code = "t"
 		if long {
-			code += "ext"
+			code += "xt"
 		}
 	case URL:
 		code = "u"
