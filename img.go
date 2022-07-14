@@ -190,9 +190,13 @@ func imgPost(c *gin.Context) {
 	f, err := c.FormFile("upload")
 	if err != nil || f == nil {
 		errThrow(c, http.StatusBadRequest, err, "invalid request")
+		return
 	}
 
-	slog.Debug().Str("filename", f.Filename).Msg("[+] New upload")
+	if f.Size < 128 {
+		errThrow(c, http.StatusBadRequest, err, "invalid request")
+		return
+	}
 
 	// read the incoming file into an io file reader
 	file, err := f.Open()
@@ -206,6 +210,8 @@ func imgPost(c *gin.Context) {
 		errThrow(c, http.StatusBadRequest, err, "invalid request")
 		return
 	}
+
+	slog.Debug().Str("filename", f.Filename).Msg("[+] New upload")
 
 	Hashr, err := blake2b.New(64, nil)
 	if err != nil {
