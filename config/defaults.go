@@ -5,11 +5,12 @@ import (
 	"os"
 	"runtime"
 
+	"git.tcp.direct/kayos/common/entropy"
 	"github.com/spf13/afero"
 )
 
 var (
-	configSections = []string{"logger", "http", "data", "other"}
+	configSections = []string{"logger", "http", "data", "other", "admin"}
 	defNoColor     = false
 )
 
@@ -41,6 +42,9 @@ func initDefaults() {
 			"delete_key_size": 12,
 			"termbin_listen":  "127.0.0.1:9999",
 			"base_url":        "http://localhost:8080/",
+		},
+		"admin": {
+			"key": entropy.RandStrWithUpper(24),
 		},
 	}
 }

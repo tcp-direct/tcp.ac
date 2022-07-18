@@ -7,8 +7,12 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"github.com/json-iterator/go"
+
 	"git.tcp.direct/tcp.direct/tcp.ac/config"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type EntryType uint8
 
@@ -22,6 +26,7 @@ const (
 
 type UserID uint64
 
+// Entry FIXME: not currently used
 type Entry interface {
 	TypeCode() string
 	UID() string
@@ -48,9 +53,9 @@ func (p *Post) setLogger() {
 	p.log = &pl
 }
 
-func NewImg(data []byte, priv bool) *Post {
+func newPost(entryType EntryType, data []byte, priv bool) *Post {
 	p := &Post{
-		entryType: Image,
+		entryType: entryType,
 		priv:      priv,
 		data:      data,
 	}
@@ -58,37 +63,35 @@ func NewImg(data []byte, priv bool) *Post {
 	return p
 }
 
-func NewTxt(data []byte, priv bool) *Post {
-	p := &Post{
-		entryType: Text,
-		priv:      priv,
-		data:      data,
+func typeToString(t EntryType, long bool) string {
+	switch t {
+	case Image:
+		if long {
+			return "img"
+		}
+		return "i"
+	case Text:
+		if long {
+			return "txt"
+		}
+		return "t"
+	case URL:
+		if long {
+			return "url"
+		}
+		return "u"
+	case Custom:
+		if long {
+			return "custom"
+		}
+		return "c"
+	default:
+		panic("unknown entry type")
 	}
-	p.setLogger()
-	return p
 }
 
 func (p *Post) TypeCode(long bool) (code string) {
-	switch p.entryType {
-	case Image:
-		code = "i"
-		if long {
-			code += "mg"
-		}
-	case Text:
-		code = "t"
-		if long {
-			code += "xt"
-		}
-	case URL:
-		code = "u"
-		if long {
-			code += "rl"
-		}
-	default:
-		panic("not implemented")
-	}
-	return
+	return typeToString(p.entryType, long)
 }
 
 func (p *Post) UID() string {
@@ -112,18 +115,15 @@ func (p *Post) Log() *zerolog.Logger {
 }
 
 func validateKey(rKey string) bool {
-	// if it doesn't match the key size or it isn't alphanumeric - throw it out
 	if len(rKey) != config.DeleteKeySize || !valid.IsAlphanumeric(rKey) {
-		log.Warn().Str("rKey", rKey).
-			Msg("delete request failed sanity check!")
 		return false
 	}
 	return true
 }
 
 func (p *Post) URLString() string {
-	var keyurl string = ""
-	url := config.BaseURL + p.TypeCode(false) + "/" + string(p.UID())
+	var keyurl = ""
+	url := config.BaseURL + p.TypeCode(false) + "/" + p.UID()
 	if p.DelKey() != "" {
 		keyurl = config.BaseURL + "d/" + p.TypeCode(false) + "/" + p.DelKey()
 	}
@@ -137,8 +137,8 @@ func (p *Post) URLString() string {
 }
 
 func (p *Post) NewPostResponse(responder any) {
-	var keyurl string = ""
-	url := config.BaseURL + p.TypeCode(false) + "/" + string(p.UID())
+	var keyurl = ""
+	url := config.BaseURL + p.TypeCode(false) + "/" + p.UID()
 	if p.DelKey() != "" {
 		keyurl = config.BaseURL + "d/" + p.TypeCode(false) + "/" + p.DelKey()
 	}
@@ -158,6 +158,15 @@ func (p *Post) NewPostResponse(responder any) {
 
 	if cg, ginok := responder.(*gin.Context); ginok {
 		cg.JSON(201, gin.H{urlString: url, delString: keyurl})
+	}
+	if ct, tdok := responder.(*textValidator); tdok {
+		js, err := json.Marshal(gin.H{urlString: url, delString: keyurl})
+		if err != nil {
+			log.Error().Interface("post", p).
+				Err(err).Msg("json marshal failed")
+			ct.out = []byte("{\"error\":\"json marshal failed\"}")
+		}
+		ct.out = js
 	}
 	return
 }

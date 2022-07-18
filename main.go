@@ -67,6 +67,12 @@ func main() {
 			log.Warn().Err(err).Msg("sync failure!")
 		}
 	}()
-	go serveTermbin()
+	go func() {
+		err := serveTermbin()
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to start termbin")
+		}
+	}()
+	time.Sleep(50 * time.Millisecond)
 	wait(httpRouter())
 }
