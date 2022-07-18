@@ -51,6 +51,7 @@ var (
 	KVMaxValueSizeMB int
 	UnixSocketPermissions uint32
 	UseUnixSocket         bool
+	TrustedProxies        []string
 )
 
 var usage = fmt.Sprintf(`
@@ -271,6 +272,10 @@ func processOpts() {
 		"admin.key":             &AdminKey,
 	}
 
+	stringSliceOpt := map[string]*[]string{
+		"http.trusted_proxies": &TrustedProxies,
+	}
+
 	if !strings.HasSuffix(BaseURL, "/") {
 		BaseURL += "/"
 	}
@@ -306,6 +311,9 @@ func processOpts() {
 	}
 	for key, opt := range uint32Opt {
 		*opt = snek.GetUint32(key)
+	}
+	for key, opt := range stringSliceOpt {
+		*opt = snek.GetStringSlice(key)
 	}
 }
 

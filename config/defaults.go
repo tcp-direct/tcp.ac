@@ -31,6 +31,7 @@ func initDefaults() {
 			"unix_socket_permissions": uint32(0644),
 			"bind_addr":               "127.0.0.1",
 			"bind_port":               "8080",
+			"trusted_proxies":         []string{"127.0.0.1"},
 		},
 		"data": {
 			"directory":         home + "/.local/share/tcp.ac/data",

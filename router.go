@@ -64,7 +64,7 @@ func httpRouter() *http.Server {
 	router.GET("/favicon.ico", favIcon)
 	router.GET("/", placeHolder)
 
-	router.GET("/ip", func(c *gin.Context) { c.String(200, c.ClientIP()) })
+	router.GET("/ip", func(c *gin.Context) { c.String(200, c.RemoteIP()) })
 
 	imgR := router.Group("/i")
 	imgR.GET("/", placeHolder)
@@ -82,6 +82,8 @@ func httpRouter() *http.Server {
 	log.Info().Str("Host", config.HTTPBind).
 		Str("Port", config.HTTPPort).
 		Msg("done; tcp.ac is live.")
+
+	router.SetTrustedProxies(config.TrustedProxies)
 
 	srv := &http.Server{
 		Addr:    config.HTTPBind + ":" + config.HTTPPort,
