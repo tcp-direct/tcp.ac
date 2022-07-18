@@ -83,6 +83,8 @@ func httpRouter() *http.Server {
 		Str("Port", config.HTTPPort).
 		Msg("done; tcp.ac is live.")
 
+	router.SetTrustedProxies(config.TrustedProxies)
+
 	srv := &http.Server{
 		Addr:    config.HTTPBind + ":" + config.HTTPPort,
 		Handler: router,
