@@ -4,19 +4,18 @@ go 1.18
 
 require (
 	git.tcp.direct/kayos/common v0.7.0
-	git.tcp.direct/kayos/putxt v0.0.0-20220707194005-5bc828145cc4
+	git.tcp.direct/kayos/putxt v0.0.0-20220718092256-8851c78611cd
 	git.tcp.direct/tcp.direct/database v0.0.0-20220610180603-058d36edd7f0
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/gin-contrib/gzip v0.0.6
 	github.com/gin-contrib/logger v0.2.2
 	github.com/gin-gonic/gin v1.8.1
+	github.com/json-iterator/go v1.1.12
 	github.com/muesli/termenv v0.12.0
 	github.com/rs/zerolog v1.27.0
 	github.com/scottleedavis/go-exif-remove v0.0.0-20190908021517-58bdbaac8636
-	github.com/spf13/afero v1.8.2
+	github.com/spf13/afero v1.9.0
 	github.com/spf13/viper v1.12.0
-	github.com/twharmon/gouid v0.5.2
-	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
 )
 
 require (
@@ -36,7 +35,6 @@ require (
 	github.com/gofrs/flock v0.8.0 // indirect
 	github.com/golang/geo v0.0.0-20190812012225-f41920e961ce // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
@@ -60,6 +58,7 @@ require (
 	github.com/yunginnanet/Rate5 v1.0.1 // indirect
 	go4.org/intern v0.0.0-20211027215823-ae77deb06f29 // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20220617031537-928513b29760 // indirect
+	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
 	golang.org/x/exp v0.0.0-20200228211341-fcea875c7e85 // indirect
 	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2 // indirect
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
@@ -70,4 +69,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	inet.af/netaddr v0.0.0-20220617031823-097006376321 // indirect
+	nullprogram.com/x/rng v1.1.0 // indirect
 )

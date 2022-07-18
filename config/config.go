@@ -46,7 +46,7 @@ func init() {
 
 var (
 	BaseURL, HTTPPort, HTTPBind, DBDir, LogDir,
-	TermbinListen, UnixSocketPath string
+	TermbinListen, UnixSocketPath, AdminKey string
 	UIDSize, DeleteKeySize, KVMaxKeySizeMB,
 	KVMaxValueSizeMB int
 	UnixSocketPermissions uint32
@@ -220,6 +220,7 @@ func getConfigPaths() (paths []string) {
 	return
 }
 
+// TODO: use this?
 func loadCustomConfig(path string) {
 	/* #nosec */
 	f, err := os.Open(path)
@@ -267,6 +268,7 @@ func processOpts() {
 		"logger.directory":      &LogDir,
 		"other.termbin_listen":  &TermbinListen,
 		"other.base_url":        &BaseURL,
+		"admin.key":             &AdminKey,
 	}
 
 	if !strings.HasSuffix(BaseURL, "/") {

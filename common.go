@@ -1,13 +1,18 @@
 package main
 
 import (
+	"git.tcp.direct/kayos/common/hash"
 	valid "github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"github.com/json-iterator/go"
+
 	"git.tcp.direct/tcp.direct/tcp.ac/config"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type EntryType uint8
 
@@ -21,34 +26,72 @@ const (
 
 type UserID uint64
 
+// Entry FIXME: not currently used
 type Entry interface {
 	TypeCode() string
 	UID() string
 	DelKey() string
 	OwnerID() uint64
 	Private() bool
+	Sum() []byte
+	Bytes() []byte
 }
 
 type Post struct {
 	entryType EntryType
+	b2sum     []byte
+	data      []byte
 	owner     UserID
 	uid, key  string
 	priv      bool
 	log       *zerolog.Logger
 }
 
-func (p *Post) TypeCode() (code string) {
-	switch p.entryType {
-	case Image:
-		code = "i"
-	case Text:
-		code = "t"
-	case URL:
-		code = "u"
-	default:
-		panic("not implemented")
+func (p *Post) setLogger() {
+	pl := log.Logger.With().Str("caller", p.TypeCode(true)+":"+p.UID()).
+		Bool("private", p.priv).Logger()
+	p.log = &pl
+}
+
+func newPost(entryType EntryType, data []byte, priv bool) *Post {
+	p := &Post{
+		entryType: entryType,
+		priv:      priv,
+		data:      data,
 	}
-	return
+	p.setLogger()
+	return p
+}
+
+func typeToString(t EntryType, long bool) string {
+	switch t {
+	case Image:
+		if long {
+			return "img"
+		}
+		return "i"
+	case Text:
+		if long {
+			return "txt"
+		}
+		return "t"
+	case URL:
+		if long {
+			return "url"
+		}
+		return "u"
+	case Custom:
+		if long {
+			return "custom"
+		}
+		return "c"
+	default:
+		panic("unknown entry type")
+	}
+}
+
+func (p *Post) TypeCode(long bool) (code string) {
+	return typeToString(p.entryType, long)
 }
 
 func (p *Post) UID() string {
@@ -63,36 +106,29 @@ func (p *Post) Private() bool {
 	return p.priv
 }
 
-func (p *Post) Log(l zerolog.Logger) *zerolog.Logger {
+func (p *Post) Log() *zerolog.Logger {
 	if p.log != nil {
 		return p.log
 	}
-	nl := l.With().
-		Str("type", p.TypeCode()).
-		Str("uid", p.UID()).Str("key", p.DelKey()).
-		Bool("private", p.Private()).Logger()
-	p.log = &nl
+	p.setLogger()
 	return p.log
 }
 
 func validateKey(rKey string) bool {
-	// if it doesn't match the key size or it isn't alphanumeric - throw it out
 	if len(rKey) != config.DeleteKeySize || !valid.IsAlphanumeric(rKey) {
-		log.Warn().Str("rKey", rKey).
-			Msg("delete request failed sanity check!")
 		return false
 	}
 	return true
 }
 
 func (p *Post) URLString() string {
-	var keyurl string = ""
-	url := config.BaseURL + p.TypeCode() + "/" + string(p.UID())
+	var keyurl = ""
+	url := config.BaseURL + p.TypeCode(false) + "/" + p.UID()
 	if p.DelKey() != "" {
-		keyurl = config.BaseURL + "d/" + p.TypeCode() + "/" + p.DelKey()
+		keyurl = config.BaseURL + "d/" + p.TypeCode(false) + "/" + p.DelKey()
 	}
 
-	p.Log(log.Logger).Info().Msg("success")
+	p.Log().Info().Msg("success")
 
 	if keyurl != "" {
 		return url + "\nDelete: " + keyurl + "\n"
@@ -100,18 +136,48 @@ func (p *Post) URLString() string {
 	return url
 }
 
-func (p *Post) Serve(c *gin.Context) {
-	var keyurl string = ""
-	url := config.BaseURL + p.TypeCode() + "/" + string(p.UID())
+func (p *Post) NewPostResponse(responder any) {
+	var keyurl = ""
+	url := config.BaseURL + p.TypeCode(false) + "/" + p.UID()
 	if p.DelKey() != "" {
-		keyurl = config.BaseURL + "d/" + p.TypeCode() + "/" + p.DelKey()
+		keyurl = config.BaseURL + "d/" + p.TypeCode(false) + "/" + p.DelKey()
 	}
 
 	log.Info().
-		Str("type", p.TypeCode()).
+		Str("type", p.TypeCode(false)).
 		Str("uid", p.UID()).Str("key", p.DelKey()).
 		Bool("private", p.Private()).Msg("success")
 
-	c.JSON(201, gin.H{"Imgurl": url, "ToDelete": keyurl})
+	// for backwards compatibility with image scripts.
+	urlString := p.TypeCode(true)
+	delString := "del"
+	if p.TypeCode(false) == "i" {
+		urlString = "Imgurl"
+		delString = "ToDelete"
+	}
+
+	if cg, ginok := responder.(*gin.Context); ginok {
+		cg.JSON(201, gin.H{urlString: url, delString: keyurl})
+	}
+	if ct, tdok := responder.(*textValidator); tdok {
+		js, err := json.Marshal(gin.H{urlString: url, delString: keyurl})
+		if err != nil {
+			log.Error().Interface("post", p).
+				Err(err).Msg("json marshal failed")
+			ct.out = []byte("{\"error\":\"json marshal failed\"}")
+		}
+		ct.out = js
+	}
 	return
+}
+
+func (p *Post) Sum() []byte {
+	if p.b2sum == nil && p.data != nil {
+		p.b2sum = hash.Sum(hash.TypeBlake2b, p.data)
+	}
+	return p.b2sum
+}
+
+func (p *Post) Bytes() []byte {
+	return p.data
 }
