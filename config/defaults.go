@@ -77,13 +77,11 @@ func setDefaults() {
 		snek.SetDefault("logger.directory", "./logs/")
 		defNoColor = true
 	}
-	if genConfig {
-		snek.SetFs(memfs)
-	}
 	for _, def := range configSections {
 		snek.SetDefault(def, defOpts[def])
 	}
 	if genConfig {
+		snek.SetFs(memfs)
 		gen(memfs)
 	}
 }

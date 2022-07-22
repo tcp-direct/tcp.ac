@@ -59,7 +59,7 @@ func del(c *gin.Context, t EntryType) {
 
 	target, err := db.With("key").Get([]byte(rKey))
 	if err != nil {
-		errThrow(c, 400, err, message400)
+		errThrow(c, 400, err, message404)
 		return
 	}
 	if target == nil || !strings.HasPrefix(string(target), typeToString(t, false)+".") {
