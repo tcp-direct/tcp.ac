@@ -4,8 +4,8 @@ go 1.18
 
 require (
 	git.tcp.direct/kayos/common v0.7.0
-	git.tcp.direct/kayos/putxt v0.0.0-20220718092256-8851c78611cd
-	git.tcp.direct/tcp.direct/database v0.0.0-20220610180603-058d36edd7f0
+	git.tcp.direct/kayos/putxt v0.0.0-20220729070925-f052c530b25c
+	git.tcp.direct/tcp.direct/database v0.0.0-20220724015615-435d1251adad
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/gin-contrib/gzip v0.0.6
 	github.com/gin-contrib/logger v0.2.2
@@ -55,15 +55,15 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.3.0 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
-	github.com/yunginnanet/Rate5 v1.0.1 // indirect
+	github.com/yunginnanet/Rate5 v1.1.0 // indirect
 	go4.org/intern v0.0.0-20211027215823-ae77deb06f29 // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20220617031537-928513b29760 // indirect
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
 	golang.org/x/exp v0.0.0-20200228211341-fcea875c7e85 // indirect
-	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2 // indirect
-	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
+	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
+	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
 	golang.org/x/text v0.3.7 // indirect
-	golang.org/x/tools v0.1.11 // indirect
+	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
