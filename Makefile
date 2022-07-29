@@ -1,6 +1,9 @@
 all: deps format check build
+build-smol: all smol
 build:
-	go build -x -v -a -ldflags "-s -w -X config.sha1ver=$(gitrev) -X config.buildTime=$(now)"
+	go build -x -v -a -ldflags "-s -w"
+smol:
+	upx --ultra-brute ./tcp.ac
 clean:
 	rm -f tcp.ac
 deps:
