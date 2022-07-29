@@ -319,6 +319,7 @@ func processOpts() {
 
 func associateExportedVariables() {
 	processOpts()
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	// We set exported variables here so that it tracks when accessed from other packages.
 	if Debug || forceDebug {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
