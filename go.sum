@@ -44,8 +44,8 @@ git.tcp.direct/Mirrors/bitcask-mirror v0.0.0-20220228092422-1ec4297c7e34 h1:tvoL
 git.tcp.direct/Mirrors/bitcask-mirror v0.0.0-20220228092422-1ec4297c7e34/go.mod h1:NX/Gqm/iy6Tg2CfcmmB/kW/qzKKrGR6o2koOKA5KWnc=
 git.tcp.direct/kayos/common v0.7.0 h1:KZDwoCzUiwQaYSWESr080N8wUVyLD27QYgzXgc7LiAQ=
 git.tcp.direct/kayos/common v0.7.0/go.mod h1:7tMZBVNPLFSZk+JXTA6pgXWpf/XHqYRfT7Q3OziI++Y=
-git.tcp.direct/kayos/putxt v0.0.0-20220729070925-f052c530b25c h1:L4bCCR2psIn14lD4jekhN+JU6KB8tJhvQ1WEqFXMvhc=
-git.tcp.direct/kayos/putxt v0.0.0-20220729070925-f052c530b25c/go.mod h1:XgtUGq+cN3VLFbOIFy7fGiqdLNR8NPyP/xpElRWvfaU=
+git.tcp.direct/kayos/putxt v0.0.0-20220821103458-78b145da8819 h1:6RUYFeS9VcTAQsJyibnxRx8Rxrlhrtk73s0HO51VC/M=
+git.tcp.direct/kayos/putxt v0.0.0-20220821103458-78b145da8819/go.mod h1:XgtUGq+cN3VLFbOIFy7fGiqdLNR8NPyP/xpElRWvfaU=
 git.tcp.direct/tcp.direct/database v0.0.0-20220724015615-435d1251adad h1:7XKd3RuaVFh6LIfXXJ1QyI6EJk9FXnibuOq4yd71Fyo=
 git.tcp.direct/tcp.direct/database v0.0.0-20220724015615-435d1251adad/go.mod h1:3+HaAxVLuH4z4RMrLso9ghw5CWPhcbD1TY52aCJ3oWI=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
