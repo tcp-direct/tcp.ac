@@ -3,7 +3,7 @@ module git.tcp.direct/tcp.direct/tcp.ac
 go 1.18
 
 require (
-	git.tcp.direct/kayos/common v0.7.0
+	git.tcp.direct/kayos/common v0.7.1
 	git.tcp.direct/kayos/putxt v0.0.0-20220821103458-78b145da8819
 	git.tcp.direct/tcp.direct/database v0.0.0-20220724015615-435d1251adad
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
@@ -58,7 +58,7 @@ require (
 	github.com/yunginnanet/Rate5 v1.1.0 // indirect
 	go4.org/intern v0.0.0-20211027215823-ae77deb06f29 // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20220617031537-928513b29760 // indirect
-	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
+	golang.org/x/crypto v0.0.0-20220817201139-bc19a97f63c8 // indirect
 	golang.org/x/exp v0.0.0-20200228211341-fcea875c7e85 // indirect
 	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
 	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
@@ -68,6 +68,6 @@ require (
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	inet.af/netaddr v0.0.0-20220617031823-097006376321 // indirect
+	inet.af/netaddr v0.0.0-20220811202034-502d2d690317 // indirect
 	nullprogram.com/x/rng v1.1.0 // indirect
 )
