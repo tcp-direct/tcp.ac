@@ -2,9 +2,7 @@ package main
 
 import (
 	"encoding/base64"
-	"io"
 	"net/http"
-	"time"
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/logger"
@@ -40,7 +38,7 @@ func httpRouter() *http.Server {
 
 	router.Use(logger.SetLogger(
 		logger.WithLogger(
-			func(c *gin.Context, w io.Writer, d time.Duration) zerolog.Logger {
+			func(c *gin.Context, l zerolog.Logger) zerolog.Logger {
 				if zerolog.GlobalLevel() > zerolog.DebugLevel {
 					// because this spams the logs
 					if c.Request.URL.String() == "/ip" {
@@ -51,7 +49,7 @@ func httpRouter() *http.Server {
 					Str("caller", c.ClientIP()).
 					Str("url", c.Request.URL.String()).
 					Str("uagent", c.Request.Header.Get("User-Agent")).
-					Dur("duration", d).Logger()
+					Logger()
 			},
 		),
 	))
