@@ -2,6 +2,7 @@ package main
 
 import (
 	"git.tcp.direct/kayos/common/hash"
+	"git.tcp.direct/kayos/common/pool"
 	valid "github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
@@ -13,6 +14,8 @@ import (
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
+
+var str = pool.NewStringFactory()
 
 type EntryType uint8
 
@@ -64,30 +67,33 @@ func newPost(entryType EntryType, data []byte, priv bool) *Post {
 }
 
 func typeToString(t EntryType, long bool) string {
+	s := str.Get()
+	defer str.MustPut(s)
 	switch t {
 	case Image:
+		s.WriteString("i")
 		if long {
-			return "img"
+			s.WriteString("mage")
 		}
-		return "i"
 	case Text:
+		s.WriteString("t")
 		if long {
-			return "txt"
+			s.WriteString("xt")
 		}
-		return "t"
 	case URL:
+		s.WriteString("u")
 		if long {
-			return "url"
+			s.WriteString("rl")
 		}
-		return "u"
 	case Custom:
+		s.WriteString("e")
 		if long {
-			return "custom"
+			s.WriteString("tc")
 		}
-		return "c"
 	default:
 		panic("unknown entry type")
 	}
+	return s.String()
 }
 
 func (p *Post) TypeCode(long bool) (code string) {
@@ -121,50 +127,68 @@ func validateKey(rKey string) bool {
 	return true
 }
 
-func (p *Post) URLString() string {
-	var keyurl = ""
-	url := config.BaseURL + p.TypeCode(false) + "/" + p.UID()
-	if p.DelKey() != "" {
-		keyurl = config.BaseURL + "d/" + p.TypeCode(false) + "/" + p.DelKey()
-	}
+type Response struct {
+	View   string `json:"view,omitempty"`
+	Delete string `json:"delete,omitempty"`
+	Error  string `json:"error,omitempty"`
+}
 
-	p.Log().Info().Msg("success")
+func (p *Post) viewURL() string {
+	s := str.Get()
+	defer str.MustPut(s)
+	s.WriteString(config.BaseURL)
+	s.WriteString(p.TypeCode(false))
+	s.WriteString("/")
+	s.WriteString(p.UID())
+	return s.String()
+}
 
-	if keyurl != "" {
-		return url + "\nDelete: " + keyurl + "\n"
+func (p *Post) delURL() string {
+	if p.key == "" {
+		return ""
 	}
-	return url
+	s := str.Get()
+	defer str.MustPut(s)
+	s.WriteString(config.BaseURL)
+	s.WriteString("d/")
+	s.WriteString(p.TypeCode(false))
+	s.WriteString("/")
+	s.WriteString(p.DelKey())
+	return s.String()
+}
+
+func (p *Post) String() string {
+	resp := new(Response)
+	resp.View = p.viewURL()
+	resp.Delete = p.delURL()
+	str, _ := json.MarshalToString(resp)
+	return str
 }
 
 func (p *Post) NewPostResponse(responder any) {
-	var keyurl = ""
-	url := config.BaseURL + p.TypeCode(false) + "/" + p.UID()
-	if p.DelKey() != "" {
-		keyurl = config.BaseURL + "d/" + p.TypeCode(false) + "/" + p.DelKey()
-	}
-
+	view := p.viewURL()
 	log.Info().
 		Str("type", p.TypeCode(false)).
 		Str("uid", p.UID()).Str("key", p.DelKey()).
-		Bool("private", p.Private()).Msg("success")
+		Bool("private", p.Private()).Msgf("success: %s", view)
 
-	// for backwards compatibility with image scripts.
 	urlString := p.TypeCode(true)
 	delString := "del"
+	// for backwards compatibility with image scripts.
 	if p.TypeCode(false) == "i" {
 		urlString = "Imgurl"
 		delString = "ToDelete"
 	}
 
 	if cg, ginok := responder.(*gin.Context); ginok {
-		cg.JSON(201, gin.H{urlString: url, delString: keyurl})
+		cg.JSON(201, gin.H{urlString: view, delString: p.delURL()})
 	}
 	if ct, tdok := responder.(*textValidator); tdok {
-		js, err := json.Marshal(gin.H{urlString: url, delString: keyurl})
+		js, err := json.Marshal(gin.H{urlString: view, delString: p.delURL()})
 		if err != nil {
 			log.Error().Interface("post", p).
 				Err(err).Msg("json marshal failed")
-			ct.out = []byte("{\"error\":\"json marshal failed\"}")
+			ct.out = []byte("{\"error\":\"internal server error\"}")
 		}
 		ct.out = js
 	}

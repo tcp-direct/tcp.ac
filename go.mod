@@ -3,8 +3,8 @@ module git.tcp.direct/tcp.direct/tcp.ac
 go 1.19
 
 require (
-	git.tcp.direct/kayos/common v0.7.5
-	git.tcp.direct/kayos/putxt v0.0.0-20221004075659-82d18038d9d0
+	git.tcp.direct/kayos/common v0.7.7-0.20221211200246-c7eafdbc5267
+	git.tcp.direct/kayos/putxt v0.2.1
 	git.tcp.direct/tcp.direct/database v0.0.0-20220829103039-b85255196bd1
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/gin-contrib/gzip v0.0.6
@@ -58,7 +58,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
-	github.com/yunginnanet/Rate5 v1.1.0 // indirect
+	github.com/yunginnanet/Rate5 v1.2.0 // indirect
 	go4.org/intern v0.0.0-20211027215823-ae77deb06f29 // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20220617031537-928513b29760 // indirect
 	golang.org/x/crypto v0.0.0-20220817201139-bc19a97f63c8 // indirect
