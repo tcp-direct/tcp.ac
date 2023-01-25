@@ -73,7 +73,7 @@ func typeToString(t EntryType, long bool) string {
 	case Image:
 		s.WriteString("i")
 		if long {
-			s.WriteString("mage")
+			s.WriteString("mg")
 		}
 	case Text:
 		s.WriteString("t")
