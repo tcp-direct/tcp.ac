@@ -11,7 +11,7 @@ require (
 	github.com/gin-contrib/logger v0.2.5
 	github.com/gin-gonic/gin v1.8.2
 	github.com/json-iterator/go v1.1.12
-	github.com/muesli/termenv v0.13.0
+	github.com/muesli/termenv v0.14.0
 	github.com/rs/zerolog v1.29.0
 	github.com/scottleedavis/go-exif-remove v0.0.0-20190908021517-58bdbaac8636
 	github.com/spf13/afero v1.9.3
@@ -21,7 +21,7 @@ require (
 require (
 	git.tcp.direct/Mirrors/bitcask-mirror v0.0.0-20220228092422-1ec4297c7e34 // indirect
 	github.com/abcum/lcp v0.0.0-20201209214815-7a3f3840be81 // indirect
-	github.com/aymanbagabas/go-osc52 v1.0.3 // indirect
+	github.com/aymanbagabas/go-osc52 v1.2.1 // indirect
 	github.com/dsoprea/go-exif v0.0.0-20190901173045-3ce78807c90f // indirect
 	github.com/dsoprea/go-jpeg-image-structure v0.0.0-20190422055009-d6f9ba25cf48 // indirect
 	github.com/dsoprea/go-logging v0.0.0-20190624164917-c4f10aab7696 // indirect
@@ -42,7 +42,7 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
-	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
