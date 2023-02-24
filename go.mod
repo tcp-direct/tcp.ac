@@ -14,7 +14,7 @@ require (
 	github.com/muesli/termenv v0.14.0
 	github.com/rs/zerolog v1.29.0
 	github.com/scottleedavis/go-exif-remove v0.0.0-20190908021517-58bdbaac8636
-	github.com/spf13/afero v1.9.3
+	github.com/spf13/afero v1.9.4
 	github.com/spf13/viper v1.15.0
 )
 
