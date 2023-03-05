@@ -1,12 +1,12 @@
 module git.tcp.direct/tcp.direct/tcp.ac
 
-go 1.19
+go 1.20
 
 require (
 	git.tcp.direct/kayos/common v0.8.1
 	git.tcp.direct/kayos/putxt v0.2.1
 	git.tcp.direct/tcp.direct/database v0.0.0-20220829103039-b85255196bd1
-	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
+	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/gin-contrib/gzip v0.0.6
 	github.com/gin-contrib/logger v0.2.5
 	github.com/gin-gonic/gin v1.9.0
