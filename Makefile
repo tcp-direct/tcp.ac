@@ -1,7 +1,7 @@
 all: deps format check build
 build-smol: all smol
 build:
-	go build -x -v -a -ldflags "-s -w"
+	go build -trimpath -x -v -a -ldflags "-s -w"
 smol:
 	upx --ultra-brute ./tcp.ac
 clean:
