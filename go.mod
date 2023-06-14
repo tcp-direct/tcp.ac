@@ -5,7 +5,7 @@ go 1.20
 require (
 	git.tcp.direct/kayos/common v0.8.6
 	git.tcp.direct/kayos/putxt v0.2.1
-	git.tcp.direct/tcp.direct/database v0.0.0-20220829103039-b85255196bd1
+	git.tcp.direct/tcp.direct/database v0.0.0-20230326075721-ff39591cbe05
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/gin-contrib/gzip v0.0.6
 	github.com/gin-contrib/logger v0.2.5
@@ -13,7 +13,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/muesli/termenv v0.15.1
 	github.com/rs/zerolog v1.29.1
-	github.com/scottleedavis/go-exif-remove v0.0.0-20190908021517-58bdbaac8636
+	github.com/scottleedavis/go-exif-remove v0.0.0-20230314195146-7e059d593405
 	github.com/spf13/afero v1.9.5
 	github.com/spf13/viper v1.16.0
 )
@@ -39,7 +39,7 @@ require (
 	github.com/gofrs/flock v0.8.0 // indirect
 	github.com/golang/geo v0.0.0-20190812012225-f41920e961ce // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
-	github.com/hashicorp/go-multierror v1.0.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
