@@ -11,7 +11,7 @@ require (
 	github.com/gin-contrib/logger v0.2.5
 	github.com/gin-gonic/gin v1.9.1
 	github.com/json-iterator/go v1.1.12
-	github.com/muesli/termenv v0.15.1
+	github.com/muesli/termenv v0.15.2
 	github.com/rs/zerolog v1.29.1
 	github.com/scottleedavis/go-exif-remove v0.0.0-20230314195146-7e059d593405
 	github.com/spf13/afero v1.9.5
