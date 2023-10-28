@@ -3,7 +3,7 @@ module git.tcp.direct/tcp.direct/tcp.ac
 go 1.20
 
 require (
-	git.tcp.direct/kayos/common v0.9.2
+	git.tcp.direct/kayos/common v0.9.3
 	git.tcp.direct/kayos/putxt v0.2.2
 	git.tcp.direct/tcp.direct/database v0.0.0-20230326075721-ff39591cbe05
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
@@ -68,10 +68,10 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/arch v0.4.0 // indirect
-	golang.org/x/crypto v0.13.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/net v0.15.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
