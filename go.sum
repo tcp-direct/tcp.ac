@@ -42,8 +42,8 @@ cloud.google.com/go/storage v1.14.0/go.mod h1:GrKmX003DSIwi9o29oFT7YDnHYwZoctc3f
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 git.tcp.direct/Mirrors/bitcask-mirror v0.0.0-20220228092422-1ec4297c7e34 h1:tvoLGGLsQ0IYKKQPweMF5qRm3qO4gcTpuzi9jAr3Wkk=
 git.tcp.direct/Mirrors/bitcask-mirror v0.0.0-20220228092422-1ec4297c7e34/go.mod h1:NX/Gqm/iy6Tg2CfcmmB/kW/qzKKrGR6o2koOKA5KWnc=
-git.tcp.direct/kayos/common v0.9.3 h1:MnQM4MH97zin+cloTsJRA3YEzagTGm/iR5sajpT+GoQ=
-git.tcp.direct/kayos/common v0.9.3/go.mod h1:tTqUGj50mpwoQD0Zsdsv6cpDzN9VfjnQMgpDC8aRfms=
+git.tcp.direct/kayos/common v0.9.4 h1:UqenO7AWOeDuItziNWQNyoBbWRDPO2GofNoYcTF60lc=
+git.tcp.direct/kayos/common v0.9.4/go.mod h1:tTqUGj50mpwoQD0Zsdsv6cpDzN9VfjnQMgpDC8aRfms=
 git.tcp.direct/kayos/putxt v0.2.4 h1:9nszM3CcRi3clnQ48s2Vw47SO1Cka8q3BTRwGArYf3M=
 git.tcp.direct/kayos/putxt v0.2.4/go.mod h1:vMvkgGBHCztFDxDze0Hs1/OINKN61asQVG9+k+RZqWU=
 git.tcp.direct/tcp.direct/database v0.0.0-20230326075721-ff39591cbe05 h1:10/lChTPRVs/zDASAmbl6jnbjT3H/Hys7z6Q8c85If0=
