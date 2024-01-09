@@ -41,8 +41,8 @@ git.tcp.direct/Mirrors/bitcask-mirror v0.0.0-20220228092422-1ec4297c7e34 h1:tvoL
 git.tcp.direct/Mirrors/bitcask-mirror v0.0.0-20220228092422-1ec4297c7e34/go.mod h1:NX/Gqm/iy6Tg2CfcmmB/kW/qzKKrGR6o2koOKA5KWnc=
 git.tcp.direct/kayos/common v0.9.6 h1:EITtktxZF/zkzqAhZZxvm6cZpFYoZ0P/gLB9RPatKUY=
 git.tcp.direct/kayos/common v0.9.6/go.mod h1:8y9b+PN1+ZVaQ/VugD9dkKe+uqhE8jH7a64RyF7h2rM=
-git.tcp.direct/kayos/putxt v0.2.4 h1:9nszM3CcRi3clnQ48s2Vw47SO1Cka8q3BTRwGArYf3M=
-git.tcp.direct/kayos/putxt v0.2.4/go.mod h1:vMvkgGBHCztFDxDze0Hs1/OINKN61asQVG9+k+RZqWU=
+git.tcp.direct/kayos/putxt v0.2.5 h1:sYdf+xAsaYvaDPD/5z/VnVg3PmMJ/gGO46wUPKJ3dzA=
+git.tcp.direct/kayos/putxt v0.2.5/go.mod h1:Ga5AkMC9LWTm+ZT4ukYOjq5D50FHOSJVma9VIS3hI78=
 git.tcp.direct/tcp.direct/database v0.0.0-20230326075721-ff39591cbe05 h1:10/lChTPRVs/zDASAmbl6jnbjT3H/Hys7z6Q8c85If0=
 git.tcp.direct/tcp.direct/database v0.0.0-20230326075721-ff39591cbe05/go.mod h1:nnb+i1C8Oxkl4QPHLxyz+HfylgZSr2yAn63ThrLiJHA=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
@@ -454,8 +454,8 @@ github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9dec
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yuin/goldmark v1.4.0/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
-github.com/yunginnanet/Rate5 v1.2.1 h1:6G8j0RLZofS76l6cMvqa8v6yeGbn2yPNk0xqH6EXcnU=
-github.com/yunginnanet/Rate5 v1.2.1/go.mod h1:f0r66kVQZojRqUgVdLC/CKexMlF0nUDAmd01tBeF4Ms=
+github.com/yunginnanet/Rate5 v1.2.2 h1:Zy7oqPKc7UqZnXNuDe0nSY/adPBJ1mxpHSJsdYOOvrE=
+github.com/yunginnanet/Rate5 v1.2.2/go.mod h1:f0r66kVQZojRqUgVdLC/CKexMlF0nUDAmd01tBeF4Ms=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/etcd/api/v3 v3.5.0/go.mod h1:cbVKeC6lCfl7j/8jBhAK6aIYO9XOjdptoxU/nLQcPvs=
 go.etcd.io/etcd/client/pkg/v3 v3.5.0/go.mod h1:IJHfcCEKxYu1Os13ZdwCwIUTUVGYTSAM3YSwc9/Ac1g=
