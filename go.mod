@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	git.tcp.direct/kayos/common v0.9.6
-	git.tcp.direct/kayos/putxt v0.2.4
+	git.tcp.direct/kayos/putxt v0.2.5
 	git.tcp.direct/tcp.direct/database v0.0.0-20230326075721-ff39591cbe05
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/gin-contrib/gzip v0.0.6
@@ -65,7 +65,7 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
-	github.com/yunginnanet/Rate5 v1.2.1 // indirect
+	github.com/yunginnanet/Rate5 v1.2.2 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/arch v0.6.0 // indirect
