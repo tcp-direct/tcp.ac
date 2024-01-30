@@ -5,7 +5,7 @@ go 1.20
 require (
 	git.tcp.direct/kayos/common v0.9.7
 	git.tcp.direct/kayos/putxt v0.2.5
-	git.tcp.direct/tcp.direct/database v0.0.0-20230326075721-ff39591cbe05
+	git.tcp.direct/tcp.direct/database v0.3.2
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/gin-contrib/gzip v0.0.6
 	github.com/gin-contrib/logger v0.3.0
