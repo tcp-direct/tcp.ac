@@ -8,7 +8,7 @@ require (
 	git.tcp.direct/tcp.direct/database v0.3.2
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/gin-contrib/gzip v1.0.0
-	github.com/gin-contrib/logger v1.1.0
+	github.com/gin-contrib/logger v1.1.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/json-iterator/go v1.1.12
 	github.com/muesli/termenv v0.15.2
