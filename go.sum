@@ -125,8 +125,8 @@ github.com/gabriel-vasile/mimetype v1.4.3/go.mod h1:d8uq/6HKRL6CGdk+aubisF/M5GcP
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/gin-contrib/gzip v1.0.0 h1:UKN586Po/92IDX6ie5CWLgMI81obiIp5nSP85T3wlTk=
 github.com/gin-contrib/gzip v1.0.0/go.mod h1:CtG7tQrPB3vIBo6Gat9FVUsis+1emjvQqd66ME5TdnE=
-github.com/gin-contrib/logger v1.1.0 h1:dP/HkfjUy9nFcyBolgXcStpgUrYToAfSs/GsVIe0l5Y=
-github.com/gin-contrib/logger v1.1.0/go.mod h1:onbSPF8qkdvedG2DDUPSTmq1HiQH5yGa7BXq+m3yQ3A=
+github.com/gin-contrib/logger v1.1.1 h1:78Qzfpx3JvpnNX/6bErifIcnFqwbVKl2gS5WGExFPOs=
+github.com/gin-contrib/logger v1.1.1/go.mod h1:Cmqqcc6Yce4+r776VET1AcU4ydAR6sMKuDtBKLje20Y=
 github.com/gin-contrib/sse v0.1.0 h1:Y/yl/+YNO8GZSjAhjMsSuLt29uWRFHdHYUb5lYOV9qE=
 github.com/gin-contrib/sse v0.1.0/go.mod h1:RHrZQHXnP2xjPF+u1gW/2HnVO7nvIa9PG3Gm+fLHvGI=
 github.com/gin-gonic/gin v1.9.1 h1:4idEAncQnU5cB7BeOkPtxjfCSye0AAm1R0RVIqJ+Jmg=
