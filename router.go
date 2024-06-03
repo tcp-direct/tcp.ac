@@ -2,13 +2,15 @@ package main
 
 import (
 	"encoding/base64"
-	"net/http"
-
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"net"
+	"net/http"
+	"os"
+	"syscall"
 
 	"git.tcp.direct/tcp.direct/tcp.ac/config"
 )
@@ -89,6 +91,41 @@ func httpRouter() *http.Server {
 	}
 
 	go srv.ListenAndServe()
+
+	if !config.UseUnixSocket {
+		return srv
+	}
+
+	var addr = config.UnixSocketPath
+	if len(config.UnixSocketPath) < 1 {
+		addr = "/var/run/tcp.ac.sock"
+	}
+	var err error
+	var unixAddr *net.UnixAddr
+	var unixListener *net.UnixListener
+	unixAddr, err = net.ResolveUnixAddr("unix", addr)
+	if err != nil {
+		panic(err)
+	}
+	// Always unlink sockets before listening on them
+	_ = syscall.Unlink(addr)
+	// Before we set socket permissions, we want to make sure only the user HellPot is running under
+	// has permission to the socket.
+	oldmask := syscall.Umask(0o077)
+	unixListener, err = net.ListenUnix("unix", unixAddr)
+	syscall.Umask(oldmask)
+	if err != nil {
+		panic(err)
+	}
+	if err = os.Chmod(
+		unixAddr.Name,
+		os.FileMode(config.UnixSocketPermissions),
+	); err != nil {
+		panic(err)
+	}
+
+	go srv.Serve(unixListener)
+	log.Info().Str("unix_addr", unixListener.Addr().String()).Msg("listening on unix socket")
 
 	return srv
 }
