@@ -43,8 +43,8 @@ git.tcp.direct/kayos/common v0.9.7 h1:k2k3fvvEFN9JV+0nyVWLoV8cGRDAhS/8ECO9tEKN+t
 git.tcp.direct/kayos/common v0.9.7/go.mod h1:mmTOIi7k99yygTa1FSOZNoFEEbSTOQV/QpTLUaQU9Tk=
 git.tcp.direct/kayos/putxt v0.2.5 h1:sYdf+xAsaYvaDPD/5z/VnVg3PmMJ/gGO46wUPKJ3dzA=
 git.tcp.direct/kayos/putxt v0.2.5/go.mod h1:Ga5AkMC9LWTm+ZT4ukYOjq5D50FHOSJVma9VIS3hI78=
-git.tcp.direct/tcp.direct/database v0.3.2 h1:Cwrn3IdB7/U4VrkRQLb88+yNcPn9aO1DmlPLMYT+uGU=
-git.tcp.direct/tcp.direct/database v0.3.2/go.mod h1:WQ5QBeKoqq+nOVF2Z3UNrEENLx/VTppFcLarvWC6B+c=
+git.tcp.direct/tcp.direct/database v0.4.1 h1:3ntEQn7vd++GaW5ZvI4HNX46GBGob4eVlVp8P4PefEY=
+git.tcp.direct/tcp.direct/database v0.4.1/go.mod h1:nLCuEmt+sIm5CjYydmlXi1TIncU3VKBgJlwN+vNfJJU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
