@@ -15,7 +15,7 @@ require (
 	github.com/rs/zerolog v1.33.0
 	github.com/scottleedavis/go-exif-remove v0.0.0-20230314195146-7e059d593405
 	github.com/spf13/afero v1.11.0
-	github.com/spf13/viper v1.18.2
+	github.com/spf13/viper v1.19.0
 )
 
 require (
@@ -40,7 +40,7 @@ require (
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/gofrs/flock v0.8.0 // indirect
 	github.com/golang/geo v0.0.0-20190812012225-f41920e961ce // indirect
-	github.com/hashicorp/errwrap v1.0.0 // indirect
+	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
